@@ -1,0 +1,46 @@
+{{- /*
+This is the base template used by every page. Pages are required to define a
+template named "main" which should be a <main> element to be rendered inside
+of the <body>.
+
+Pages may define templates with the following names to populate sections of
+the document. When a page omits any of the templates, the corresponding
+contents will either be replaced by a default value defined within this template
+or omitted from the rendered output entirely.
+
+  description - The "meta description" element
+  robots - The "robots tag" element
+  title - The <title> element
+  pre-content - Any other arbitrary content to include in the <head> element
+  main - The main content of the page
+  post-content - Any other arbitrary content to include at the end of the <body>
+
+If the data passed to this template includes a field named HTMLTitle and a
+template named "title" hasn't been defined, the value of that field will be
+inluded in the <title> element.
+*/ -}}
+
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width">
+    {{block "description" .}}
+      <meta name="description" content="One time I ate 3 cheeseburgers for breakfast and it gave me superhuman eyesight. I could see for miles.">
+    {{end}}
+    {{block "robots" .}}
+      <meta name="robots" content="noindex">
+    {{end}}
+    {{block "title" .}}
+      <title>{{if .HTMLTitle}}{{.HTMLTitle}} - {{end}}yodahunters</title>
+    {{end}}
+    {{block "pre-content" .}}{{end}}
+  </head>
+  <body>
+    {{template "header" .}}
+    {{template "main" .}}
+    {{template "footer" .}}
+    {{block "post-content" .}}{{end}}
+  </body>
+</html>
