@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 
@@ -22,5 +23,5 @@ func main() {
 		Address:    *addr,
 		TemplateFS: template.TrustedFSFromTrustedSource(staticSrc),
 	}
-	log.Fatal(server.Run(cfg))
+	log.Fatal(server.Run(context.Background(), cfg))
 }
