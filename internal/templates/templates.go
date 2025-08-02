@@ -12,16 +12,16 @@ import (
 
 // Renderer manages the parsing and rendering of template files.
 type Renderer struct {
-	tmpls *sync.Map
+	tmpls sync.Map
 }
 
 // New returns a Renderer populated with the templates in the given filesystem.
 func New(fs template.TrustedFS) (*Renderer, error) {
 	pages := []string{"home"}
 
-	m := new(sync.Map)
+	r := new(Renderer)
 	for _, page := range pages {
-		t, err := template.New("base.html").ParseFS(fs, "*.tmpl")
+		t, err := template.New("base.tmpl").ParseFS(fs, "*.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("ParseFS: %v", err)
 		}
@@ -29,9 +29,9 @@ func New(fs template.TrustedFS) (*Renderer, error) {
 		if _, err := t.ParseFS(fs, p); err != nil {
 			return nil, fmt.Errorf("ParseFS(%q): %v", p, err)
 		}
-		m.Store(page, t)
+		r.tmpls.Store(page, t)
 	}
-	return &Renderer{m}, nil
+	return r, nil
 }
 
 // Render renders the named template using the provided data.
@@ -42,7 +42,7 @@ func (r *Renderer) Render(name string, data any) ([]byte, error) {
 	}
 	t := tmpl.(*template.Template)
 	var buf bytes.Buffer
-	if err := t.ExecuteTemplate(&buf, "base.tmpl", data); err != nil {
+	if err := t.Execute(&buf, data); err != nil {
 		return nil, fmt.Errorf("failed to render template for %q: %v", name, err)
 	}
 	return buf.Bytes(), nil

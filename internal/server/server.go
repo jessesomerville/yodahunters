@@ -39,8 +39,6 @@ func Run(cfg Config) error {
 }
 
 func (s *Server) serveHTML(w http.ResponseWriter, tmpl string, data any) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	buf, err := s.renderer.Render(tmpl, data)
 	if err != nil {
 		log.Printf("serveHTML(w, %q, %+v): %v", tmpl, data, err)
