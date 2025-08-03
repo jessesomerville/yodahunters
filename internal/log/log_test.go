@@ -111,7 +111,7 @@ func TestWith(t *testing.T) {
 	buf.Reset()
 
 	w.Warnf(ctx, "msg")
-	want = "level=Warn msg=msg foo=123\n"
+	want = "level=WARN msg=msg foo=123\n"
 	if got := buf.String(); got != want {
 		t.Errorf("With(\"foo\", 123).Warnf(ctx, \"msg\")\n  got=%q\n  want=%q", got, want)
 	}
