@@ -1,0 +1,31 @@
+x-database-variables: &database-variables
+  YODAHUNTERS_DATABASE_HOST: db
+  YODAHUNTERS_DATABASE_NAME: ${YODAHUNTERS_DATABASE_NAME:-yodahunters-db}
+  YODAHUNTERS_DATABASE_PASSWORD: ${YODAHUNTERS_DATABASE_PASSWORD:-postgres}
+  YODAHUNTERS_DATABASE_USER: ${YODAHUNTERS_DATABASE_USER:-postgres}
+
+services:
+  db:
+    image: postgres:17.5
+    restart: always
+    environment:
+      <<: *database-variables
+      LANG: C
+      POSTGRES_DB: ${YODAHUNTERS_DATABASE_NAME:-yodahunters-db}
+      POSTGRES_PASSWORD: ${YODAHUNTERS_DATABASE_PASSWORD:-postgres}
+      POSTGRES_USER: ${YODAHUNTERS_DATABASE_USER:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 127.0.0.1:5432:5432
+  go:
+    image: golang:1.24
+    entrypoint: go
+    environment:
+      <<: *database-variables
+    volumes:
+      - ../:/yodahunters
+    working_dir: /yodahunters
+
+volumes:
+  pgdata:
