@@ -8,7 +8,9 @@ import (
 	"net/http"
 
 	"github.com/google/safehtml/template"
+	"github.com/jessesomerville/yodahunters/internal/envconfig"
 	"github.com/jessesomerville/yodahunters/internal/log"
+	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/templates"
 )
 
@@ -21,6 +23,7 @@ type Config struct {
 // Server handles HTTP connections and serves backend content.
 type Server struct {
 	renderer *templates.Renderer
+	dbClient *pg.Client
 }
 
 // Run starts the server and returns an error upon exit.
@@ -29,8 +32,18 @@ func Run(ctx context.Context, cfg Config) error {
 	if err != nil {
 		return err
 	}
+	dbname := envconfig.GetEnvOrDefault("YODAHUNTERS_DATABASE_NAME", "yodahunters-db")
+	if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
+		return err
+	}
+	dbClient, err := pg.NewClient(ctx, dbname)
+	if err != nil {
+		return err
+	}
+
 	s := &Server{
 		renderer: renderer,
+		dbClient: dbClient,
 	}
 
 	mux := http.NewServeMux()

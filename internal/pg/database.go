@@ -1,0 +1,35 @@
+package pg
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/jessesomerville/yodahunters/internal/log"
+)
+
+const (
+	createDBQuery = `
+	CREATE DATABASE %s
+		TEMPLATE=template0
+		LC_COLLATE='C'
+		LC_CTYPE='C';`
+)
+
+// CreateDBIfNotExists creates a new DB with the given name if it doesn't
+// already exist.
+func CreateDBIfNotExists(ctx context.Context, name string) error {
+	client, err := NewClient(ctx, "postgres")
+	if err != nil {
+		return err
+	}
+	defer client.Close(ctx)
+
+	for _, err := range client.Query(ctx, "SELECT 1 FROM pg_database WHERE datname = $1 LIMIT 1;", name) {
+		// Query returned a row so the table exists.
+		return err
+	}
+
+	log.Infof(ctx, "Database %q will be created because it does not exist.", name)
+	query := fmt.Sprintf(createDBQuery, name)
+	return client.Exec(ctx, query)
+}
