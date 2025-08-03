@@ -10,15 +10,12 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/server"
 )
 
-var (
-	addr   = flag.String("addr", "localhost:8080", "the address for the server to listen on")
-	static = flag.String("static", "static", "path to a directory containing static assets for the site")
-)
+var addr = flag.String("addr", "localhost:8080", "the address for the server to listen on")
 
 func main() {
 	flag.Parse()
 
-	staticSrc := template.TrustedSourceFromFlag(flag.Lookup("static").Value)
+	staticSrc := template.TrustedSourceFromConstant("static")
 	cfg := server.Config{
 		Address:    *addr,
 		TemplateFS: template.TrustedFSFromTrustedSource(staticSrc),

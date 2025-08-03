@@ -6,6 +6,7 @@
 
 !*.go
 !*.tmpl
+!*.yml
 !go.sum
 !go.mod
 
