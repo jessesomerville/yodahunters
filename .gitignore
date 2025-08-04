@@ -5,6 +5,7 @@
 !/.gitignore
 
 !*.go
+!*.sh
 !*.tmpl
 !*.yml
 !*.yaml

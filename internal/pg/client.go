@@ -120,10 +120,10 @@ func ConnString(dbname string) string {
 	if dbname == "" {
 		dbname = user
 	}
-	return fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s", host, port, dbname, user, pass)
+	return fmt.Sprintf("host='%s' port=%s dbname='%s' user='%s' password='%s'", host, port, dbname, user, pass)
 }
 
-var pwRegexp = regexp.MustCompile(`password=\S+`)
+var pwRegexp = regexp.MustCompile(`password='[^']*'`)
 
 func redactPassword(s string) string {
 	return pwRegexp.ReplaceAllLiteralString(s, "password=hunter2")
