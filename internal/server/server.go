@@ -4,6 +4,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -16,14 +17,24 @@ import (
 
 // Config defines the backend server configuration.
 type Config struct {
-	Address    string
+	// Address is the address to serve HTTP requests from.
+	Address string
+	// TemplateFS holds the golang templates for rendering HTML.
 	TemplateFS template.TrustedFS
+	// DevMode makes the server reparse the template files when a page
+	// is loaded. This enables editing templates without having to restart
+	// the server.
+	DevMode bool
 }
 
 // Server handles HTTP connections and serves backend content.
 type Server struct {
 	renderer *templates.Renderer
+	tmplFS   template.TrustedFS
+
 	dbClient *pg.Client
+
+	devmode bool
 }
 
 // Run starts the server and returns an error upon exit.
@@ -41,9 +52,15 @@ func Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 
+	if cfg.DevMode {
+		log.Warnf(ctx, "Dev mode is enabled, templates will be reparsed each time a page is loaded.")
+	}
+
 	s := &Server{
 		renderer: renderer,
+		tmplFS:   cfg.TemplateFS,
 		dbClient: dbClient,
+		devmode:  cfg.DevMode,
 	}
 
 	mux := http.NewServeMux()
@@ -53,6 +70,16 @@ func Run(ctx context.Context, cfg Config) error {
 }
 
 func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl string, data any) {
+	if s.devmode {
+		renderer, err := templates.New(s.tmplFS)
+		if err != nil {
+			log.Errorf(ctx, "failed to reparse templates in devmode: %v", err)
+			http.Error(w, fmt.Sprintf("[devmode]: failed to reparse templates: %v", err), http.StatusInternalServerError)
+			return
+		}
+		s.renderer = renderer
+	}
+
 	buf, err := s.renderer.Render(tmpl, data)
 	if err != nil {
 		log.Errorf(ctx, "serveHTML(w, %q, data): %v", tmpl, err)
