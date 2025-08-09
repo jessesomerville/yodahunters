@@ -24,9 +24,15 @@ func CreateDBIfNotExists(ctx context.Context, name string) error {
 	}
 	defer client.Close(ctx)
 
-	for _, err := range client.Query(ctx, "SELECT 1 FROM pg_database WHERE datname = $1 LIMIT 1;", name) {
-		// Query returned a row so the table exists.
+	rows, err := client.Query(ctx, "SELECT 1 FROM pg_database WHERE datname = $1 LIMIT 1;", name)
+	if err != nil {
 		return err
+	}
+
+	for rows.Next() {
+		// Query returned a row so the database exists.
+		rows.Close()
+		return rows.Err()
 	}
 
 	log.Infof(ctx, "Database %q will be created because it does not exist.", name)
