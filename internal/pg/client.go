@@ -3,9 +3,7 @@ package pg
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"iter"
 	"regexp"
 
 	"github.com/jackc/pgx/v5"
@@ -43,45 +41,16 @@ func (c *Client) Close(ctx context.Context) error {
 	return c.conn.Close(ctx)
 }
 
-// Query executes a query and returns a single-use iterator over the results.
+// Query executes a query and returns the resulting rows.
 //
-// Queries can use parameter values, which are referenced in the query string
+// Queries can use parameter values which are referenced in the query string
 // as $1, $2, etc. Parameters can only be used to substitute data values, not
 // identifiers such as table or column names.
-//
-// TODO: Create a SQL builder that allows substituting identifiers at runtime
-// without using string concatenation.
-func (c *Client) Query(ctx context.Context, sql string, params ...any) iter.Seq2[*Row, error] {
-	return func(yield func(*Row, error) bool) {
-		if err := c.healthCheck(ctx); err != nil {
-			yield(nil, err)
-			return
-		}
-
-		rows, err := c.conn.Query(ctx, sql, params...)
-		if err != nil {
-			yield(nil, fmt.Errorf("%w: %v", ErrQueryFailed, err))
-			return
-		}
-
-		var rerr error
-		defer func() {
-			rows.Close()
-			rerr = errors.Join(rerr, rows.Err())
-		}()
-
-		for rows.Next() {
-			vals, err := rows.Values()
-			if err != nil {
-				rerr = fmt.Errorf("%w: %v", ErrQueryFailed, err)
-				yield(nil, rerr)
-				return
-			}
-			if !yield(&Row{vals}, rerr) {
-				return
-			}
-		}
+func (c *Client) Query(ctx context.Context, sql string, params ...any) (pgx.Rows, error) {
+	if err := c.healthCheck(ctx); err != nil {
+		return nil, err
 	}
+	return c.conn.Query(ctx, sql, params...)
 }
 
 // Exec executes sql and returns the status of the operation.

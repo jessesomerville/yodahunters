@@ -7,4 +7,6 @@ var (
 	ErrConnection   = errors.New("connection failed")
 	ErrClientClosed = errors.New("client closed")
 	ErrQueryFailed  = errors.New("query execution failed")
+	ErrDecodeType   = errors.New("decode row failed")
+	ErrEmptyRow     = errors.New("row has 0 columns")
 )
