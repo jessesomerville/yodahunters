@@ -18,7 +18,7 @@ var (
 func main() {
 	flag.Parse()
 
-	staticSrc := template.TrustedSourceFromConstant("static")
+	staticSrc := template.TrustedSourceFromConstant("templates")
 	cfg := server.Config{
 		Address:    *addr,
 		TemplateFS: template.TrustedFSFromTrustedSource(staticSrc),

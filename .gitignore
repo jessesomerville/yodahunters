@@ -11,6 +11,9 @@
 !*.yaml
 !go.sum
 !go.mod
+!*.css
+!*.ttf
+!*.png
 
 !README.md
 
