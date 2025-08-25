@@ -65,6 +65,10 @@ func Run(ctx context.Context, cfg Config) error {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", s.handleHome())
+
+	fs := http.FileServer(http.Dir("static"))
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	log.Infof(ctx, "Serving site at %q\n", cfg.Address)
 	return http.ListenAndServe(cfg.Address, mux)
 }
