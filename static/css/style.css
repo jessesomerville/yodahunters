@@ -22,67 +22,89 @@
 body {
   margin: 0;
   font-family: "IBM Plex Serif", serif;
-  background-color: #C8F75B;
+  background-color: #cbff7d;
   color: #430303;
-  line-height: 1.6;
 }
 
-.wrap {
-  /* max-width: 1200px;  Max width for the entire forum content */
+.site-header {
+  border: medium dashed #28073B;
   margin: 10px;
-  background-color: #C8F75B; /* main content area */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px; /* Slightly rounded corners for the overall wrap */
-  overflow: hidden; /* Clear floats */
+  height: 120px;
+  display: grid;
+  grid-template-columns: 20% 1fr;
+  grid-template-rows: 60% 20%;
+  gap: 5px;
+  justify-content: space-around;
 }
 
-a {
-  color: #28073B; /* */
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-  color: #690D88;
-}
-
-.site-header .header-imgs {
-  width: 100%;
-  background-color: #C8F75B;
-  border-radius: 5px;
-  box-shadow: 0px 0px 5vw #333, inset 0px 0px 1.5vw #8F8;
-  padding: 0.2vw;
-  border-width: 10px;
-}
-
-.site-header .header-imgs .title-img {
-  width: 70%;
-  vertical-align: center;
-  align: left;
-}
-
-.site-header .header-imgs .yoda-crosshairs {
-  width: 20%;
-}
-
-.site-header .header-sub {
-  background-color: #690D88;
-  box-shadow: 0px 0px 2vw #6AE1F0;
-  margin: 0;
-  border-radius: 5px;
-}
-
-.site-header .header-sub p {
-  color: #FF4136;
-  box-shadow: inset 0px 0px 2vw #6AE1F0;
-  font-family: "Staatliches", sans-serif;
-  font-size: 3vw;
-  margin: 0;
-  font-weight: 700;
-}
-
-.site-header .site-description {
-  font-size: 1.1em;
+.site-logo {
+  border: medium solid #28073B;
+  width: 90%;
+  height: 100%;
+  margin-left: 5px;
   margin-top: 5px;
-  opacity: 0.8;
+  margin-bottom: 5px;
+  display: block;
+  grid-column: 1;
+  grid-row: 1/3;
+}
+
+.site-logo > img {
+  width: 100%;
+  height: 100%;
+}
+
+.title-img {
+  border: medium solid #28073B;
+  width: 95%;
+  height: 100%;
+  display: block;
+  margin-top: 5px;
+  margin-left: 10px;
+  margin-right: auto;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.header-sub {
+  border: medium solid #28073B;
+  grid-column: 2;
+  grid-row: 2;
+  width: 95%;
+  height: 100%;
+  margin-left: 10px;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.site-description {
+  font-family: "Staatliches";
+  font-size: 140%;
+  overflow: hidden;
+  text-wrap: nowrap;
+}
+
+.navbar {
+  margin-left: 10px;
+  margin-right: 10px;
+  border: medium solid #28073B;
+}
+
+.navbar > ul {
+  text-wrap: nowrap;
+  list-style-type: none;
+  font-family: "IBM Plex Sans";
+  font-weight: bolder;
+}
+
+.navbar ul > li {
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.navbar > ul > li > a {
+  font-size: large;
+  color: #28073B;
+  text-decoration: none;
 }/*# sourceMappingURL=style.css.map */
