@@ -18,6 +18,14 @@
   font-family: "Staatliches";
   src: url("../fonts/Staatliches-Regular.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Audiowide";
+  src: url("../fonts/Audiowide-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "EagleLake";
+  src: url("../fonts/EagleLake-Regular.ttf") format("truetype");
+}
 /* Basic Reset & Font */
 body {
   margin: 0;
@@ -96,15 +104,64 @@ body {
   list-style-type: none;
   font-family: "IBM Plex Sans";
   font-weight: bolder;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .navbar ul > li {
   display: inline-block;
   margin-right: 5px;
+  margin-left: 0;
 }
 
 .navbar > ul > li > a {
-  font-size: large;
+  font-size: 100%;
   color: #28073B;
   text-decoration: none;
+}
+
+.word-up {
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 10px;
+  border: medium solid #28073B;
+  padding: 0;
+}
+
+.word-up-title {
+  font-family: "Audiowide";
+  font-weight: bolder;
+  font-size: 150%;
+  display: inline-block;
+  margin: 0;
+  padding-left: 5px;
+  padding-right: 5px;
+  border: medium solid #28073B;
+}
+
+.word-up-content {
+  margin: 5px;
+}
+
+.threadbox {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.threadbox-title-content {
+  font-family: "EagleLake";
+  font-size: 150%;
+  margin: 5px;
+}
+
+.threadbox-table {
+  margin: 0;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.threadbox-table-header {
+  border: medium solid #28073B;
+  background-color: #6AE1F0;
+  font-family: "Pochaevsk";
 }/*# sourceMappingURL=style.css.map */
