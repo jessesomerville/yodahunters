@@ -158,10 +158,43 @@ body {
   margin: 0;
   width: 100%;
   border-collapse: collapse;
+  text-align: center;
 }
 
 .threadbox-table-header {
   border: medium solid #28073B;
   background-color: #6AE1F0;
   font-family: "Pochaevsk";
+}
+
+.threadbox-row > td {
+  border: medium solid #28073B;
+}
+
+.threadbox-icon-cell {
+  width: 70px;
+}
+
+.threadbox-title-cell {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 1000px;
+}
+
+.threadbox-rating-cell {
+  width: 100px;
+  white-space: nowrap;
+}
+
+.rating-star {
+  height: 10px;
+  width: auto;
+}
+
+.threadbox-lastpost-cell {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 200px;
 }/*# sourceMappingURL=style.css.map */
