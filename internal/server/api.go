@@ -9,7 +9,7 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/log"
 )
 
-func (s *Server) HandleGetThreads(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var threads []Thread
@@ -39,7 +39,7 @@ func (s *Server) HandleGetThreads(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-func (s *Server) HandleGetThreadByID(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleGetThreadByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "Error retrieving ID from Path", http.StatusInternalServerError)
@@ -62,10 +62,9 @@ func (s *Server) HandleGetThreadByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(jsonData)
-
 }
 
-func (s *Server) HandlePostThreads(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) {
 	const insertThreadQuery = `
 	INSERT INTO threads (title, body)
 	VALUES ($1, $2)

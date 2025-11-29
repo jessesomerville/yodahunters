@@ -48,7 +48,7 @@ func CreateDBIfNotExists(ctx context.Context, client *Client, name string) error
 	return client.Exec(ctx, query)
 }
 
-func CheckTableExists(ctx context.Context, client *Client, name string) (bool, error) {
+func checkTableExists(ctx context.Context, client *Client, name string) (bool, error) {
 	var exists bool
 	err := client.QueryRow(ctx, checkTableExistsQuery, name).Scan(&exists)
 	if err != nil {
@@ -63,8 +63,8 @@ func CheckTableExists(ctx context.Context, client *Client, name string) (bool, e
 	return exists, nil
 }
 
-func CreateThreadsTableIfNotExists(ctx context.Context, client *Client) error {
-	exists, err := CheckTableExists(ctx, client, "threads")
+func createThreadsTableIfNotExists(ctx context.Context, client *Client) error {
+	exists, err := checkTableExists(ctx, client, "threads")
 	if err != nil {
 		return err
 	}
@@ -75,6 +75,7 @@ func CreateThreadsTableIfNotExists(ctx context.Context, client *Client) error {
 	return nil
 }
 
+// Initialize the application database.
 func InitDB(ctx context.Context, dbname string) error {
 	client, err := NewClient(ctx, dbname)
 	if err != nil {
@@ -86,7 +87,7 @@ func InitDB(ctx context.Context, dbname string) error {
 	if err != nil {
 		return err
 	}
-	err = CreateThreadsTableIfNotExists(ctx, client)
+	err = createThreadsTableIfNotExists(ctx, client)
 	if err != nil {
 		return err
 	}
