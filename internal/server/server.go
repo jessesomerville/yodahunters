@@ -50,8 +50,7 @@ func Run(ctx context.Context, cfg Config) error {
 	if err := pg.InitDB(ctx, dbname); err != nil {
 		return err
 	}
-	// Should we expose a client here and pass it to the pg module as a parameter? Or just
-	// create a new client in the pg module whenever we interact with the db?
+
 	dbClient, err := pg.NewClient(ctx, dbname)
 	if err != nil {
 		return err

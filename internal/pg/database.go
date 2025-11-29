@@ -50,10 +50,9 @@ func CreateDBIfNotExists(ctx context.Context, client *Client, name string) error
 	return client.Exec(ctx, query)
 }
 
-
 func CheckTableExists(ctx context.Context, client *Client, name string) (bool, error) {
 	var exists bool
-	err := client.QueryRow(ctx, checkTableExistsQuery, name).Scan(&exists) 
+	err := client.QueryRow(ctx, checkTableExistsQuery, name).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -67,10 +66,11 @@ func CheckTableExists(ctx context.Context, client *Client, name string) (bool, e
 }
 
 func CreateThreadsTableIfNotExists(ctx context.Context, client *Client) error {
-	exists, err := CheckTableExists(ctx, client, "threads"); if err != nil {
+	exists, err := CheckTableExists(ctx, client, "threads")
+	if err != nil {
 		return err
 	}
-	if exists == false {
+	if !exists {
 		log.Infof(ctx, "Creating threads table")
 		return client.Exec(ctx, createThreadsTableQuery)
 	}
@@ -78,16 +78,18 @@ func CreateThreadsTableIfNotExists(ctx context.Context, client *Client) error {
 }
 
 func InitDB(ctx context.Context, dbname string) error {
-	client, err := NewClient(ctx, "postgres")
+	client, err := NewClient(ctx, dbname)
 	if err != nil {
 		return err
 	}
 	defer client.Close(ctx)
 
-	err = CreateDBIfNotExists(ctx, client, dbname); if err != nil {
+	err = CreateDBIfNotExists(ctx, client, dbname)
+	if err != nil {
 		return err
 	}
-	err = CreateThreadsTableIfNotExists(ctx, client); if err != nil {
+	err = CreateThreadsTableIfNotExists(ctx, client)
+	if err != nil {
 		return err
 	}
 	return nil

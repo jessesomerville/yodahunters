@@ -17,7 +17,7 @@ func (s *Server) HandleGetThreads(w http.ResponseWriter, r *http.Request) {
 	rows, err := s.dbClient.Query(ctx, "SELECT * FROM threads")
 	if err != nil {
 		http.Error(w, "Failed to query DB", http.StatusInternalServerError)
-		log.Errorf(r.Context(), "Failed to query DB")
+		log.Errorf(r.Context(), "Failed to query DB!")
 	}
 	for rows.Next() {
 		var thread Thread
@@ -29,6 +29,7 @@ func (s *Server) HandleGetThreads(w http.ResponseWriter, r *http.Request) {
 		}
 		threads = append(threads, thread)
 	}
+	rows.Close()
 
 	jsonData, err := json.Marshal(threads)
 	if err != nil {
