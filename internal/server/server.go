@@ -13,7 +13,6 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/log"
 	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/templates"
-	"github.com/jessesomerville/yodahunters/internal/api"
 )
 
 // Config defines the backend server configuration.
@@ -73,13 +72,13 @@ func Run(ctx context.Context, cfg Config) error {
 	mux.Handle("/", s.handleHome())
 
 	apiMux := http.NewServeMux()
-	apiMux.HandleFunc("GET /threads", api.HandleGetThreads)
-	apiMux.HandleFunc("GET /threads/{id}", api.HandleGetThreadByID)
-	apiMux.HandleFunc("POST /threads", api.HandlePostThreads)
+	apiMux.HandleFunc("GET /threads", s.HandleGetThreads)
+	apiMux.HandleFunc("GET /threads/{id}", s.HandleGetThreadByID)
+	apiMux.HandleFunc("POST /threads", s.HandlePostThreads)
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
 	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))	
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	log.Infof(ctx, "Serving site at %q\n", cfg.Address)
 	return http.ListenAndServe(cfg.Address, mux)
@@ -113,4 +112,3 @@ func (s *Server) handleHome() http.HandlerFunc {
 		s.serveHTML(r.Context(), w, "home", nil)
 	}
 }
-
