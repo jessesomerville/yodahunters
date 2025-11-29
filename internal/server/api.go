@@ -20,7 +20,7 @@ func (s *Server) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 	}
 	for rows.Next() {
 		var thread Thread
-		err = rows.Scan(&thread.ID, &thread.Title, &thread.Body)
+		err = rows.Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
 		if err != nil {
 			rowData, _ := rows.Values()
 			http.Error(w, "Failed to read query rows", http.StatusInternalServerError)
@@ -49,7 +49,7 @@ func (s *Server) handleGetThreadByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var thread Thread
-	err = s.dbClient.QueryRow(ctx, "SELECT id, title, body FROM threads WHERE id = $1", id).Scan(&thread.ID, &thread.Title, &thread.Body)
+	err = s.dbClient.QueryRow(ctx, "SELECT id, title, body FROM threads WHERE id = $1", id).Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
 	if err != nil {
 		http.Error(w, "Failed to retrieve thread!", http.StatusInternalServerError)
 		log.Errorf(ctx, "Failed to retrieve thread with ID: %d", id)
@@ -68,7 +68,7 @@ func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) {
 	const insertThreadQuery = `
 	INSERT INTO threads (title, body)
 	VALUES ($1, $2)
-	RETURNING id, title, body`
+	RETURNING id, title, body, created_at`
 
 	defer r.Body.Close()
 
@@ -89,7 +89,7 @@ func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var thread Thread
-	err = s.dbClient.QueryRow(ctx, insertThreadQuery, t.Title, t.Body).Scan(&thread.ID, &thread.Title, &thread.Body)
+	err = s.dbClient.QueryRow(ctx, insertThreadQuery, t.Title, t.Body).Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
 	if err != nil {
 		http.Error(w, "Failed to update threads table", http.StatusInternalServerError)
 		log.Errorf(ctx, "Couldn't update threads table!")

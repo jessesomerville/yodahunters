@@ -9,7 +9,7 @@ import (
 
 const (
 	createDBQuery = `
-	CREATE DATABASE %s
+	CREATE DATABASE "%s"
 		TEMPLATE=template0
 		LC_COLLATE='C'
 		LC_CTYPE='C';`
@@ -25,7 +25,8 @@ const (
 	CREATE TABLE IF NOT EXISTS threads (
 		id SERIAL PRIMARY KEY,
 		title VARCHAR(100) NOT NULL,
-		body TEXT NOT NULL
+		body TEXT NOT NULL,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`
 )
 
@@ -77,13 +78,21 @@ func createThreadsTableIfNotExists(ctx context.Context, client *Client) error {
 
 // InitDB initializes the application database.
 func InitDB(ctx context.Context, dbname string) error {
-	client, err := NewClient(ctx, dbname)
+	// Create a client with the default database name to connect in case
+	// we don't have our app database.
+	client, err := NewClient(ctx, "postgres")
 	if err != nil {
 		return err
 	}
 	defer client.Close(ctx)
 
 	err = CreateDBIfNotExists(ctx, client, dbname)
+	if err != nil {
+		return err
+	}
+
+	// Switch to a client for the app database
+	client, err = NewClient(ctx, dbname)
 	if err != nil {
 		return err
 	}
