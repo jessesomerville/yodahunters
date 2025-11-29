@@ -75,7 +75,7 @@ func createThreadsTableIfNotExists(ctx context.Context, client *Client) error {
 	return nil
 }
 
-// Initialize the application database.
+// InitDB initializes the application database.
 func InitDB(ctx context.Context, dbname string) error {
 	client, err := NewClient(ctx, dbname)
 	if err != nil {
@@ -92,5 +92,4 @@ func InitDB(ctx context.Context, dbname string) error {
 		return err
 	}
 	return nil
-
 }
