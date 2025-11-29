@@ -44,9 +44,13 @@ func Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 	dbname := envconfig.GetEnvOrDefault("YODAHUNTERS_DATABASE_NAME", "yodahunters-db")
-	if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
+	// if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
+	// 	return err
+	// }
+	if err := pg.InitDB(ctx, dbname); err != nil {
 		return err
 	}
+
 	dbClient, err := pg.NewClient(ctx, dbname)
 	if err != nil {
 		return err
@@ -65,6 +69,14 @@ func Run(ctx context.Context, cfg Config) error {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", s.handleHome())
+
+	apiMux := http.NewServeMux()
+	apiMux.HandleFunc("GET /threads", s.handleGetThreads)
+	apiMux.HandleFunc("GET /threads/{id}", s.handleGetThreadByID)
+	apiMux.HandleFunc("POST /threads", s.handlePostThreads)
+	// TODO: delete
+
+	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
 	fs := http.FileServer(http.Dir("static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
