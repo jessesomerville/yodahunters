@@ -75,8 +75,7 @@ func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var t Thread
-	err = json.Unmarshal(bodyBytes, &t)
-	if err != nil {
+	if err = json.Unmarshal(bodyBytes, &t); err != nil {
 		http.Error(w, "Failed to parse request JSON", http.StatusInternalServerError)
 		log.Errorf(r.Context(), "Failed to parse request JSON!")
 	}
