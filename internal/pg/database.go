@@ -19,8 +19,7 @@ const (
 		SELECT 1
 		FROM information_schema.tables
 		WHERE table_name = $1
-	)
-	`
+	)`
 
 	createThreadsTableQuery = `
 	CREATE TABLE IF NOT EXISTS threads (
@@ -32,7 +31,6 @@ const (
 
 // CreateDBIfNotExists creates a new DB with the given name if it doesn't
 // already exist.
-// func CreateDBIfNotExists(ctx context.Context, name string) error {
 func CreateDBIfNotExists(ctx context.Context, client *Client, name string) error {
 	rows, err := client.Query(ctx, "SELECT 1 FROM pg_database WHERE datname = $1 LIMIT 1;", name)
 	if err != nil {
@@ -93,4 +91,5 @@ func InitDB(ctx context.Context, dbname string) error {
 		return err
 	}
 	return nil
+
 }

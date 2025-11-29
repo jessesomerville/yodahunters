@@ -74,6 +74,9 @@ func Run(ctx context.Context, cfg Config) error {
 	apiMux.HandleFunc("GET /threads", s.HandleGetThreads)
 	apiMux.HandleFunc("GET /threads/{id}", s.HandleGetThreadByID)
 	apiMux.HandleFunc("POST /threads", s.HandlePostThreads)
+	// TODO: delete
+
+	apiMux.HandleFunc("POST /threads/{threadID}/comments", s.HandlePostComment)
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
 	fs := http.FileServer(http.Dir("static"))

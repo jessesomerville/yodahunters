@@ -58,7 +58,7 @@ func (c *Client) Query(ctx context.Context, sql string, params ...any) (pgx.Rows
 // Queries can use parameter values which are referenced in the query string
 // as $1, $2, etc. Parameters can only be used to substitute data values, not
 // identifiers such as table or column names.
-func (c *Client) QueryRow(ctx context.Context, sql string, params ...any) (pgx.Row) {
+func (c *Client) QueryRow(ctx context.Context, sql string, params ...any) pgx.Row {
 	return c.conn.QueryRow(ctx, sql, params...)
 }
 
