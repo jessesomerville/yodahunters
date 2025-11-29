@@ -1,19 +1,18 @@
 package api
 
 import (
-	"fmt"
 	"encoding/json"
-	"net/http"
-	"io"
-	"regexp"
+	"fmt"
 	"html"
+	"io"
+	"net/http"
+	"regexp"
 	"strconv"
 
 	// "github.com/jessesomerville/yodahunters/internal/envconfig"
 	"github.com/jessesomerville/yodahunters/internal/log"
 	"github.com/jessesomerville/yodahunters/internal/pg"
 )
-
 
 func HandleRequest(r *http.Request, w http.ResponseWriter) {
 	// Testing code - just reflect the POST body in a 200
@@ -22,14 +21,13 @@ func HandleRequest(r *http.Request, w http.ResponseWriter) {
 	pathPattern := regexp.MustCompile(`\/api\/(.+)`)
 	pathMatch := pathPattern.FindStringSubmatch(r.URL.Path)
 
-
 	// There shouldn't be a way to hit this handler without a match...
 	if len(pathMatch) != 2 {
 		log.Errorf(r.Context(), "Request with URL %q hit API Handler and failed the path regex!\nPathMatch %s", r.URL.Path, pathMatch)
 		http.Error(w, "Invalid URL Path", http.StatusInternalServerError)
 		return
 	}
-	
+
 	path := pathMatch[1]
 
 	defer r.Body.Close()
@@ -41,7 +39,6 @@ func HandleRequest(r *http.Request, w http.ResponseWriter) {
 	}
 
 	body := string(bodyBytes)
-
 
 	fmt.Fprintf(w, "Received the following body from path %s\n\n%s", html.EscapeString(path), html.EscapeString(body))
 }
@@ -58,28 +55,35 @@ func HandleGetThreads(w http.ResponseWriter, r *http.Request) {
 
 	var threads []Thread
 	rows, err := dbClient.Query(ctx, "SELECT * FROM threads")
+	if err != nil {
+		http.Error(w, "Failed to query DB", http.StatusInternalServerError)
+		log.Errorf(r.Context(), "Failed to query DB")
+	}
 	for rows.Next() {
 		var thread Thread
-		err = rows.Scan(&thread.ID, &thread.Title, &thread.Body); if err != nil {
+		err = rows.Scan(&thread.ID, &thread.Title, &thread.Body)
+		if err != nil {
 			rowData, _ := rows.Values()
 			http.Error(w, "Failed to read query rows", http.StatusInternalServerError)
 			log.Errorf(r.Context(), "Failed to read rows %s", rowData)
 		}
 		threads = append(threads, thread)
 	}
-	
-	jsonData, err := json.Marshal(threads); if err != nil {
+
+	jsonData, err := json.Marshal(threads)
+	if err != nil {
 		http.Error(w, "Failed to marshal threads to JSON", http.StatusInternalServerError)
-		log.Errorf(r.Context(), "Failed to marshal threads to JSON %s", threads)
+		log.Errorf(r.Context(), "Failed to marshal threads to JSON %v", threads)
 	}
 
 	w.Write(jsonData)
 }
 
 func HandleGetThreadByID(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id")); if err != nil {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
 		http.Error(w, "Error retrieving ID from Path", http.StatusInternalServerError)
-		log.Errorf(r.Context(), "Error retrieving ID from Path, ID: %s", id)
+		log.Errorf(r.Context(), "Error retrieving ID from Path, ID: %d", id)
 	}
 
 	ctx := r.Context()
@@ -91,8 +95,6 @@ func HandleGetThreadByID(w http.ResponseWriter, r *http.Request) {
 	}
 	defer dbClient.Close(ctx)
 
-
-
 	var thread Thread
 	err = dbClient.QueryRow(ctx, "SELECT id, title, body FROM threads WHERE id = $1", id).Scan(&thread.ID, &thread.Title, &thread.Body)
 	if err != nil {
@@ -100,15 +102,15 @@ func HandleGetThreadByID(w http.ResponseWriter, r *http.Request) {
 		log.Errorf(ctx, "Failed to retrieve thread with ID: %d", id)
 	}
 
-	jsonData, err := json.Marshal(thread); if err != nil {
+	jsonData, err := json.Marshal(thread)
+	if err != nil {
 		http.Error(w, "Failed to marshal thread to JSON", http.StatusInternalServerError)
-		log.Errorf(r.Context(), "Failed to marshal thread to JSON %s", thread)
+		log.Errorf(r.Context(), "Failed to marshal thread to JSON %v", thread)
 	}
 
 	w.Write(jsonData)
 
 }
-
 
 func HandlePostThreads(w http.ResponseWriter, r *http.Request) {
 	const insertThreadQuery = `
@@ -147,9 +149,10 @@ func HandlePostThreads(w http.ResponseWriter, r *http.Request) {
 		log.Errorf(ctx, "Couldn't update threads table!")
 	}
 
-	jsonData, err := json.Marshal(thread); if err != nil {
+	jsonData, err := json.Marshal(thread)
+	if err != nil {
 		http.Error(w, "Failed to marshal thread to JSON", http.StatusInternalServerError)
-		log.Errorf(r.Context(), "Failed to marshal thread to JSON %s", thread)
+		log.Errorf(r.Context(), "Failed to marshal thread to JSON %v", thread)
 	}
 
 	w.Write(jsonData)
