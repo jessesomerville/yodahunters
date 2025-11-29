@@ -6,29 +6,24 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jessesomerville/yodahunters/internal/log"
 )
 
 func (s *Server) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var threads []Thread
-	rows, err := s.dbClient.Query(ctx, "SELECT * FROM threads")
+	rows, err := s.dbClient.Query(ctx, "SELECT id, title, body, created_at FROM threads")
 	if err != nil {
 		http.Error(w, "Failed to query DB", http.StatusInternalServerError)
-		log.Errorf(r.Context(), "Failed to query DB!")
+		log.Errorf(r.Context(), "Failed to query DB: %v", err)
 	}
-	for rows.Next() {
-		var thread Thread
-		err = rows.Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
-		if err != nil {
-			rowData, _ := rows.Values()
-			http.Error(w, "Failed to read query rows", http.StatusInternalServerError)
-			log.Errorf(r.Context(), "Failed to read rows %s", rowData)
-		}
-		threads = append(threads, thread)
+	defer rows.Close()
+	threads, err := pgx.CollectRows(rows, pgx.RowToStructByName[Thread])
+	if err != nil {
+		http.Error(w, "Failed to scan DB results!", http.StatusInternalServerError)
+		log.Errorf(r.Context(), "Failed to scan DB results: %v", err)
 	}
-	rows.Close()
 
 	jsonData, err := json.Marshal(threads)
 	if err != nil {
@@ -49,7 +44,8 @@ func (s *Server) handleGetThreadByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var thread Thread
-	err = s.dbClient.QueryRow(ctx, "SELECT id, title, body FROM threads WHERE id = $1", id).Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
+	err = s.dbClient.QueryRow(ctx, "SELECT id, title, body, created_at FROM threads WHERE id = $1", id).
+		Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
 	if err != nil {
 		http.Error(w, "Failed to retrieve thread!", http.StatusInternalServerError)
 		log.Errorf(ctx, "Failed to retrieve thread with ID: %d", id)
@@ -80,7 +76,6 @@ func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) {
 
 	var t Thread
 	err = json.Unmarshal(bodyBytes, &t)
-
 	if err != nil {
 		http.Error(w, "Failed to parse request JSON", http.StatusInternalServerError)
 		log.Errorf(r.Context(), "Failed to parse request JSON!")
@@ -89,7 +84,8 @@ func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var thread Thread
-	err = s.dbClient.QueryRow(ctx, insertThreadQuery, t.Title, t.Body).Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
+	err = s.dbClient.QueryRow(ctx, insertThreadQuery, t.Title, t.Body).
+		Scan(&thread.ID, &thread.Title, &thread.Body, &thread.CreatedAt)
 	if err != nil {
 		http.Error(w, "Failed to update threads table", http.StatusInternalServerError)
 		log.Errorf(ctx, "Couldn't update threads table!")

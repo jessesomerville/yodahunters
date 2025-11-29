@@ -9,7 +9,7 @@ import (
 
 const (
 	createDBQuery = `
-	CREATE DATABASE "%s"
+	CREATE DATABASE %q
 		TEMPLATE=template0
 		LC_COLLATE='C'
 		LC_CTYPE='C';`
