@@ -13,6 +13,7 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/log"
 	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/templates"
+	"github.com/jessesomerville/yodahunters/internal/api"
 )
 
 // Config defines the backend server configuration.
@@ -44,9 +45,14 @@ func Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 	dbname := envconfig.GetEnvOrDefault("YODAHUNTERS_DATABASE_NAME", "yodahunters-db")
-	if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
+	// if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
+	// 	return err
+	// }
+	if err := pg.InitDB(ctx, dbname); err != nil {
 		return err
 	}
+	// Should we expose a client here and pass it to the pg module as a parameter? Or just
+	// create a new client in the pg module whenever we interact with the db?
 	dbClient, err := pg.NewClient(ctx, dbname)
 	if err != nil {
 		return err
@@ -66,8 +72,14 @@ func Run(ctx context.Context, cfg Config) error {
 	mux := http.NewServeMux()
 	mux.Handle("/", s.handleHome())
 
+	apiMux := http.NewServeMux()
+	apiMux.HandleFunc("GET /threads", api.HandleGetThreads)
+	apiMux.HandleFunc("GET /threads/{id}", api.HandleGetThreadByID)
+	apiMux.HandleFunc("POST /threads", api.HandlePostThreads)
+	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
+
 	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))	
 
 	log.Infof(ctx, "Serving site at %q\n", cfg.Address)
 	return http.ListenAndServe(cfg.Address, mux)
@@ -101,3 +113,4 @@ func (s *Server) handleHome() http.HandlerFunc {
 		s.serveHTML(r.Context(), w, "home", nil)
 	}
 }
+
