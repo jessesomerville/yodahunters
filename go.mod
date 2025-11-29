@@ -1,6 +1,6 @@
 module github.com/jessesomerville/yodahunters
 
-go 1.24.5
+go 1.25.4
 
 require (
 	github.com/google/safehtml v0.1.0

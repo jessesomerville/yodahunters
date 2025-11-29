@@ -16,8 +16,10 @@
 !*.png
 !*.gif
 !*.svg
+!*.sql
 
 !README.md
+!/docs/*.md
 
 # !Makefile
 
