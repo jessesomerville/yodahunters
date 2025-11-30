@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -162,8 +161,8 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var user User
-	userQueryString := "SELECT (id, username, email, pw_hash, created_at) FROM users WHERE username = ($1)"
-	err = s.dbClient.QueryRow(ctx, userQueryString, fmt.Sprintf("%c%s%c", '\'', login.Username, '\'')).
+	userQueryString := "SELECT id, username, email, pw_hash, created_at FROM users WHERE username = $1"
+	err = s.dbClient.QueryRow(ctx, userQueryString, login.Username).
 		Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt)
 	if err != nil {
 		http.Error(w, "Failed to find user with that username", http.StatusInternalServerError)
