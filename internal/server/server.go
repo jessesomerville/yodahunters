@@ -13,6 +13,7 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/envconfig"
 	"github.com/jessesomerville/yodahunters/internal/log"
 	"github.com/jessesomerville/yodahunters/internal/pg"
+	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 	"github.com/jessesomerville/yodahunters/internal/templates"
 )
 
@@ -67,10 +68,7 @@ func Run(ctx context.Context, cfg Config) error {
 		return err
 	}
 	dbname := envconfig.GetEnvOrDefault("YODAHUNTERS_DATABASE_NAME", "yodahunters-db")
-	// if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
-	// 	return err
-	// }
-	if err := pg.InitDB(ctx, dbname); err != nil {
+	if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
 		return err
 	}
 
@@ -94,9 +92,9 @@ func Run(ctx context.Context, cfg Config) error {
 	mux.Handle("/", s.handleHome())
 
 	apiMux := http.NewServeMux()
-	apiMux.HandleFunc("GET /threads", s.handleGetThreads)
-	apiMux.HandleFunc("GET /threads/{id}", s.handleGetThreadByID)
-	apiMux.HandleFunc("POST /threads", s.handlePostThreads)
+	apiMux.Handle("GET /threads", middleware.ErrorHandler(s.handleGetThreads))
+	apiMux.Handle("GET /threads/{id}", middleware.ErrorHandler(s.handleGetThreadByID))
+	apiMux.Handle("POST /threads", middleware.ErrorHandler(s.handlePostThreads))
 	// TODO: delete
 	apiMux.HandleFunc("POST /register", s.handleRegister)
 	apiMux.HandleFunc("POST /login", s.handleLogin)
