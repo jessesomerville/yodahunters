@@ -28,6 +28,15 @@ const (
 		body TEXT NOT NULL,
 		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`
+
+	createUsersTableQuery = `
+	CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		username VARCHAR(100) NOT NULL,
+		email VARCHAR(255) NOT NULL,
+		pw_hash VARCHAR(255) NOT NULL,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+	);`
 )
 
 // CreateDBIfNotExists creates a new DB with the given name if it doesn't
@@ -76,6 +85,18 @@ func createThreadsTableIfNotExists(ctx context.Context, client *Client) error {
 	return nil
 }
 
+func createUsersTableIfNotExists(ctx context.Context, client *Client) error {
+	exists, err := checkTableExists(ctx, client, "users")
+	if err != nil {
+		return err
+	}
+	if !exists {
+		log.Infof(ctx, "Creating users table")
+		return client.Exec(ctx, createUsersTableQuery)
+	}
+	return nil
+}
+
 // InitDB initializes the application database.
 func InitDB(ctx context.Context, dbname string) error {
 	// Create a client with the default database name to connect in case
@@ -92,12 +113,13 @@ func InitDB(ctx context.Context, dbname string) error {
 	}
 
 	// Switch to a client for the app database
-	client, err = NewClient(ctx, dbname)
-	if err != nil {
+	if client, err = NewClient(ctx, dbname); err != nil {
 		return err
 	}
-	err = createThreadsTableIfNotExists(ctx, client)
-	if err != nil {
+	if err = createThreadsTableIfNotExists(ctx, client); err != nil {
+		return err
+	}
+	if err = createUsersTableIfNotExists(ctx, client); err != nil {
 		return err
 	}
 	return nil

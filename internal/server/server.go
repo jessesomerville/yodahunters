@@ -75,6 +75,8 @@ func Run(ctx context.Context, cfg Config) error {
 	apiMux.HandleFunc("GET /threads/{id}", s.handleGetThreadByID)
 	apiMux.HandleFunc("POST /threads", s.handlePostThreads)
 	// TODO: delete
+	apiMux.HandleFunc("POST /register", s.handleRegister)
+	apiMux.HandleFunc("POST /login", s.handleLogin)
 
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
