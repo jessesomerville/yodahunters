@@ -11,6 +11,37 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/log"
 )
 
+// QueryRowsToStruct executes a query and reads the result into the struct T.
+//
+// T must be a struct with field names matching the columns returned by the
+// query. A field's corresponding column can be explicitly defined by
+// specifying the column's name in the "db" struct tag. Fields with the "db"
+// tag set to "-" will be ignored.
+func QueryRowsToStruct[T any](ctx context.Context, client *Client, sql string, params ...any) ([]T, error) {
+	if client == nil {
+		return nil, ErrClientUninitialized
+	}
+	rows, err := client.Query(ctx, sql, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return pgx.CollectRows(rows, pgx.RowToStructByName[T])
+}
+
+// QueryRowToStruct executes a query and returns a single row as the struct T.
+func QueryRowToStruct[T any](ctx context.Context, client *Client, sql string, params ...any) (T, error) {
+	if client == nil {
+		return *new(T), ErrClientUninitialized
+	}
+	rows, err := client.Query(ctx, sql, params...)
+	if err != nil {
+		return *new(T), err
+	}
+	defer rows.Close()
+	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
+}
+
 // Client is a postgres client for interacting with a postgres server.
 type Client struct {
 	conn *pgx.Conn
@@ -58,8 +89,11 @@ func (c *Client) Query(ctx context.Context, sql string, params ...any) (pgx.Rows
 // Queries can use parameter values which are referenced in the query string
 // as $1, $2, etc. Parameters can only be used to substitute data values, not
 // identifiers such as table or column names.
-func (c *Client) QueryRow(ctx context.Context, sql string, params ...any) pgx.Row {
-	return c.conn.QueryRow(ctx, sql, params...)
+func (c *Client) QueryRow(ctx context.Context, sql string, params ...any) (pgx.Row, error) {
+	if err := c.healthCheck(ctx); err != nil {
+		return nil, err
+	}
+	return c.conn.QueryRow(ctx, sql, params...), nil
 }
 
 // Exec executes sql and returns the status of the operation.
