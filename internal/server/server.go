@@ -78,7 +78,7 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", s.handleHome())
+	mux.Handle("/", middleware.AuthorizationHandler(s.handleHome(), s.jwtSecret))
 
 	apiMux := http.NewServeMux()
 	apiMux.Handle("GET /threads", middleware.ErrorHandler(s.handleGetThreads))

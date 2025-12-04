@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/jessesomerville/yodahunters/internal/pg"
+	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -121,7 +122,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	jwt, err := GenerateJWT(id, s.jwtSecret)
+	jwt, err := middleware.GenerateJWT(id, s.jwtSecret)
 	if err != nil {
 		return err
 	}
