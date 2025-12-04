@@ -30,5 +30,6 @@ func AuthorizationHandler(next http.HandlerFunc, secret []byte) http.HandlerFunc
 		if !isAuthenticated(r, secret) {
 			http.Redirect(w, r, "/login", http.StatusFound)
 		}
+		next.ServeHTTP(w, r)
 	}
 }
