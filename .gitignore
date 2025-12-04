@@ -17,6 +17,7 @@
 !*.gif
 !*.svg
 !*.sql
+!*.js
 
 !README.md
 !/docs/*.md

@@ -78,15 +78,16 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", middleware.AuthorizationHandler(s.handleHome(), s.jwtSecret))
+	mux.Handle("/", middleware.ErrorHandler(middleware.AuthorizationHandler(s.handleHome))
+	mux.Handle("/login", middleware.ErrorHandler(s.handleLogin), s.jwtSecret))
 
 	apiMux := http.NewServeMux()
-	apiMux.Handle("GET /threads", middleware.ErrorHandler(s.handleGetThreads))
-	apiMux.Handle("GET /threads/{id}", middleware.ErrorHandler(s.handleGetThreadByID))
-	apiMux.Handle("POST /threads", middleware.ErrorHandler(s.handlePostThreads))
+	apiMux.Handle("GET /threads", middleware.ErrorHandler(s.apiHandleGetThreads))
+	apiMux.Handle("GET /threads/{id}", middleware.ErrorHandler(s.apiHandleGetThreadByID))
+	apiMux.Handle("POST /threads", middleware.ErrorHandler(s.apiHandlePostThreads))
 	// TODO: delete
-	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.handleRegister))
-	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.handleLogin))
+	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.apiHandleRegister))
+	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.apiHandleLogin))
 
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
@@ -97,31 +98,32 @@ func Run(ctx context.Context, cfg Config) error {
 	return http.ListenAndServe(cfg.Address, mux)
 }
 
-func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl string, data any) {
+func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl string, data any) error {
 	if s.devmode {
 		renderer, err := templates.New(s.tmplFS)
 		if err != nil {
-			log.Errorf(ctx, "failed to reparse templates in devmode: %v", err)
-			http.Error(w, fmt.Sprintf("[devmode]: failed to reparse templates: %v", err), http.StatusInternalServerError)
-			return
+			return err
 		}
 		s.renderer = renderer
 	}
 
 	buf, err := s.renderer.Render(tmpl, data)
 	if err != nil {
-		log.Errorf(ctx, "serveHTML(w, %q, data): %v", tmpl, err)
-		// TODO - Replace this with a proper error page response.
-		http.Error(w, "failed to render page", http.StatusInternalServerError)
-		return
+		return err
 	}
 	if _, err := io.Copy(w, bytes.NewReader(buf)); err != nil {
 		log.Errorf(ctx, "serveHTML(w, %q, data): failed to write to http.ResponseWriter: %v", tmpl, err)
 	}
+	return nil
 }
 
-func (s *Server) handleHome() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		s.serveHTML(r.Context(), w, "home", nil)
-	}
+func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
+	s.serveHTML(r.Context(), w, "home", nil)
+	return nil
+}
+
+func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
+	log.Infof(r.Context(), "Hit Login")
+	s.serveHTML(r.Context(), w, "login", nil)
+	return nil
 }
