@@ -31,11 +31,11 @@ type JWT struct {
 	Raw       string
 }
 
-// GenerateJWT takes a user id and the signing secret and generates a JWT
+// GenerateJWT takes a user id and the signing secret and generates a JWT.
 // with the following structure:
 // Header: {"alg":"HS256", "typ":"JWT"}
 // Claims: {"user_id": user_id, "exp": [current time + 12hrs]}
-func GenerateJWT(user_id int, secret []byte) (JWT, error) {
+func GenerateJWT(userID int, secret []byte) (JWT, error) {
 	// Set the header and payload
 	jwt := JWT{
 		Header: joseHeader{
@@ -43,7 +43,7 @@ func GenerateJWT(user_id int, secret []byte) (JWT, error) {
 			Typ: "JWT",
 		},
 		Payload: jwsPayload{
-			UserID: user_id,
+			UserID: userID,
 			Exp:    int((time.Now().Add(12 * time.Hour)).Unix()),
 		},
 		Signature: nil,
@@ -69,7 +69,7 @@ func GenerateJWT(user_id int, secret []byte) (JWT, error) {
 }
 
 // ParseJWT parses a JWT in string form, and returns a JWT struct
-// with the fields filled out appropriately
+// with the fields filled out appropriately.
 func ParseJWT(s string) (JWT, error) {
 	jwtParts := strings.Split(s, ".")
 
@@ -106,7 +106,7 @@ func ParseJWT(s string) (JWT, error) {
 	return jwt, nil
 }
 
-// String returns a string with the encoded JWT
+// String returns a string with the encoded JWT.
 func (j *JWT) String() string {
 	return j.Raw
 }
