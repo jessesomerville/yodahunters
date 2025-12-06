@@ -6,8 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type joseHeader struct {
@@ -20,6 +23,7 @@ type jwsPayload struct {
 	Exp    int `json:"exp"`
 }
 
+// JWT is a struct that holds the relevant data for handling JWTs
 type JWT struct {
 	Header    joseHeader
 	Payload   jwsPayload
@@ -27,6 +31,10 @@ type JWT struct {
 	Raw       string
 }
 
+// GenerateJWT takes a user id and the signing secret and generates a JWT
+// with the following structure:
+// Header: {"alg":"HS256", "typ":"JWT"}
+// Claims: {"user_id": user_id, "exp": [current time + 12hrs]}
 func GenerateJWT(user_id int, secret []byte) (JWT, error) {
 	// Set the header and payload
 	jwt := JWT{
@@ -60,6 +68,8 @@ func GenerateJWT(user_id int, secret []byte) (JWT, error) {
 	return jwt, nil
 }
 
+// ParseJWT parses a JWT in string form, and returns a JWT struct
+// with the fields filled out appropriately
 func ParseJWT(s string) (JWT, error) {
 	jwtParts := strings.Split(s, ".")
 
@@ -96,10 +106,13 @@ func ParseJWT(s string) (JWT, error) {
 	return jwt, nil
 }
 
+// String returns a string with the encoded JWT
 func (j *JWT) String() string {
 	return j.Raw
 }
 
+// IsValid verifies that the JWT data supplied in the struct is
+// was signed by the secret supplied, and that the JWT has not expired
 func (j *JWT) IsValid(secret []byte) (bool, error) {
 	signatureStart := strings.LastIndex(j.Raw, ".")
 	headerPayload := j.Raw[:signatureStart]
@@ -110,4 +123,25 @@ func (j *JWT) IsValid(secret []byte) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// GeneratePasswordHash adds a hashed password to a User struct if  there is a
+// password in the struct, and a password hash is not already present.
+func (u *User) GeneratePasswordHash() error {
+	// If no password is provided, then it should be set to an empty string.
+	// It shouldn't be possible to set an empty string as a password in any case.
+	if u.PasswordHash != nil {
+		return errors.New("user struct already contains password hash")
+	}
+	if u.Password == "" {
+		return errors.New("attempted to generate password hash where password is an empty string")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.PasswordHash = hash
+	u.Password = ""
+	return nil
 }

@@ -90,7 +90,9 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("user with username: %s already exists", u.Username)
 	}
 
-	u.GeneratePasswordHash()
+	if err = u.GeneratePasswordHash(); err != nil {
+		return err
+	}
 	const insertUser = `
 	INSERT INTO users (username, email, pw_hash)
 	VALUES ($1, $2, $3)

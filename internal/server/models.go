@@ -11,7 +11,7 @@ import (
 // User is a struct for managing users in the app.
 // PasswordHash is omitted completely from JSON since it should never be returned.
 // Password can be supplied on registration, but it won't be saved in the DB so
-// we shouldn't have to worry about it getting marshalled accidentally.
+// we shouldn't have to worry about it getting marshaled accidentally.
 type User struct {
 	ID           int       `json:"id,omitempty" db:"id"`
 	Username     string    `json:"username,omitempty" db:"username"`
