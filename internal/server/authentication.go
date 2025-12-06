@@ -23,7 +23,7 @@ type jwsPayload struct {
 	Exp    int `json:"exp"`
 }
 
-// JWT is a struct that holds the relevant data for handling JWTs
+// JWT is a struct that holds the relevant data for handling JWTs.
 type JWT struct {
 	Header    joseHeader
 	Payload   jwsPayload
@@ -112,7 +112,7 @@ func (j *JWT) String() string {
 }
 
 // IsValid verifies that the JWT data supplied in the struct is
-// was signed by the secret supplied, and that the JWT has not expired
+// was signed by the secret supplied, and that the JWT has not expired.
 func (j *JWT) IsValid(secret []byte) (bool, error) {
 	signatureStart := strings.LastIndex(j.Raw, ".")
 	headerPayload := j.Raw[:signatureStart]
