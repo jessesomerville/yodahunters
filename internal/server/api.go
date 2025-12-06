@@ -80,7 +80,20 @@ func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("user with username: %s already exists", u.Username)
 	}
 
-	u.GeneratePasswordHash()
+	const checkEmailExists = "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)"
+	var emailExists bool
+	row, err = s.dbClient.QueryRow(r.Context(), checkEmailExists, u.Email)
+	if err != nil {
+		return err
+	}
+	row.Scan(&emailExists)
+	if emailExists {
+		return fmt.Errorf("user with username: %s already exists", u.Username)
+	}
+
+	if err = u.GeneratePasswordHash(); err != nil {
+		return err
+	}
 	const insertUser = `
 	INSERT INTO users (username, email, pw_hash)
 	VALUES ($1, $2, $3)
