@@ -4,6 +4,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,6 +36,8 @@ type Server struct {
 
 	dbClient *pg.Client
 
+	jwtSecret []byte
+
 	devmode bool
 }
 
@@ -59,10 +62,19 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 
 	s := &Server{
-		renderer: renderer,
-		tmplFS:   cfg.TemplateFS,
-		dbClient: dbClient,
-		devmode:  cfg.DevMode,
+		renderer:  renderer,
+		tmplFS:    cfg.TemplateFS,
+		dbClient:  dbClient,
+		devmode:   cfg.DevMode,
+		jwtSecret: make([]byte, 32),
+	}
+	// Generate the JWT signing key
+	n, err := rand.Read(s.jwtSecret)
+	if err != nil {
+		return err
+	}
+	if n != 32 {
+		return fmt.Errorf("failed to generate JWT signing key, wanted 32 bytes but got %d", n)
 	}
 
 	mux := http.NewServeMux()
@@ -73,6 +85,8 @@ func Run(ctx context.Context, cfg Config) error {
 	apiMux.Handle("GET /threads/{id}", middleware.ErrorHandler(s.handleGetThreadByID))
 	apiMux.Handle("POST /threads", middleware.ErrorHandler(s.handlePostThreads))
 	// TODO: delete
+	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.handleRegister))
+	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.handleLogin))
 
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 

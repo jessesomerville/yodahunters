@@ -19,7 +19,7 @@ services:
     ports:
       - 127.0.0.1:5432:5432
   go:
-    image: golang:1.24
+    image: golang:1.25
     entrypoint: go run cmd/backend/main.go -addr 0.0.0.0:8080
     environment:
       <<: *database-variables

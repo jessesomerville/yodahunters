@@ -39,4 +39,3 @@ func CreateDBIfNotExists(ctx context.Context, name string) error {
 	query := fmt.Sprintf(createDBQuery, name)
 	return client.Exec(ctx, query)
 }
-
