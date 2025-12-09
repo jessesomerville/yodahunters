@@ -128,7 +128,9 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 	}
 	var id int
 	var passwordHash []byte
-	row.Scan(&id, &passwordHash)
+	if err = row.Scan(&id, &passwordHash); err != nil {
+		return err
+	}
 
 	err = bcrypt.CompareHashAndPassword(passwordHash, []byte(login.Password))
 	if err != nil {
