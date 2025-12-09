@@ -72,7 +72,9 @@ func GenerateJWT(userID int, secret []byte) (JWT, error) {
 // with the fields filled out appropriately.
 func ParseJWT(s string) (JWT, error) {
 	jwtParts := strings.Split(s, ".")
-
+  if len(jwtParts) != 3 {
+    return JWT{}, errors.New("malformed JWT")
+  }
 	headerBytes, err := base64.RawURLEncoding.DecodeString(jwtParts[0])
 	if err != nil {
 		return JWT{}, err
