@@ -118,15 +118,11 @@ func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl stri
 }
 
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
-	if err := s.serveHTML(r.Context(), w, "home", nil); err != nil {
-		return err
-	}
-	return nil
+	err := s.serveHTML(r.Context(), w, "home", nil)
+	return err
 }
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
-	if err := s.serveHTML(r.Context(), w, "login", nil); err != nil {
-		return err
-	}
-	return nil
+	err := s.serveHTML(r.Context(), w, "login", nil)
+	return err
 }
