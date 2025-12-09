@@ -33,8 +33,8 @@ type JWT struct {
 
 // GenerateJWT takes a user id and the signing secret and generates a JWT.
 // with the following structure:
-// Header: {"alg":"HS256", "typ":"JWT"}
-// Claims: {"user_id": user_id, "exp": [current time + 12hrs]}
+//  Header: {"alg":"HS256", "typ":"JWT"}
+//  Claims: {"user_id": user_id, "exp": [current time + 12hrs]}
 func GenerateJWT(userID int, secret []byte) (JWT, error) {
 	// Set the header and payload
 	jwt := JWT{
