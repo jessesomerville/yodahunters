@@ -33,8 +33,8 @@ type JWT struct {
 
 // GenerateJWT takes a user id and the signing secret and generates a JWT.
 // with the following structure:
-// Header: {"alg":"HS256", "typ":"JWT"}
-// Claims: {"user_id": user_id, "exp": [current time + 12hrs]}
+//  Header: {"alg":"HS256", "typ":"JWT"}
+//  Claims: {"user_id": user_id, "exp": [current time + 12hrs]}
 func GenerateJWT(userID int, secret []byte) (JWT, error) {
 	// Set the header and payload
 	jwt := JWT{
@@ -72,7 +72,9 @@ func GenerateJWT(userID int, secret []byte) (JWT, error) {
 // with the fields filled out appropriately.
 func ParseJWT(s string) (JWT, error) {
 	jwtParts := strings.Split(s, ".")
-
+  if len(jwtParts) != 3 {
+    return JWT{}, errors.New("malformed JWT")
+  }
 	headerBytes, err := base64.RawURLEncoding.DecodeString(jwtParts[0])
 	if err != nil {
 		return JWT{}, err

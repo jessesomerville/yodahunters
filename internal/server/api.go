@@ -6,12 +6,13 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/jessesomerville/yodahunters/internal/pg"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (s *Server) handleGetThreads(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) error {
 	q := `SELECT id, title, body, created_at FROM threads`
 	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q)
 	if err != nil {
@@ -20,7 +21,7 @@ func (s *Server) handleGetThreads(w http.ResponseWriter, r *http.Request) error 
 	return json.NewEncoder(w).Encode(threads)
 }
 
-func (s *Server) handleGetThreadByID(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) apiHandleGetThreadByID(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
@@ -34,7 +35,7 @@ func (s *Server) handleGetThreadByID(w http.ResponseWriter, r *http.Request) err
 	return json.NewEncoder(w).Encode(thread)
 }
 
-func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) apiHandlePostThreads(w http.ResponseWriter, r *http.Request) error {
 	reqBody, err := io.ReadAll(r.Body)
 	r.Body.Close()
 	if err != nil {
@@ -57,7 +58,7 @@ func (s *Server) handlePostThreads(w http.ResponseWriter, r *http.Request) error
 	return json.NewEncoder(w).Encode(thread)
 }
 
-func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error {
 	reqBody, err := io.ReadAll(r.Body)
 	r.Body.Close()
 	if err != nil {
@@ -106,7 +107,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(user)
 }
 
-func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 	reqBody, err := io.ReadAll(r.Body)
 	r.Body.Close()
 	if err != nil {
@@ -127,7 +128,9 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	}
 	var id int
 	var passwordHash []byte
-	row.Scan(&id, &passwordHash)
+	if err = row.Scan(&id, &passwordHash); err != nil {
+		return err
+	}
 
 	err = bcrypt.CompareHashAndPassword(passwordHash, []byte(login.Password))
 	if err != nil {
@@ -142,5 +145,17 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		AccessToken string `json:"access_token"`
 	}
 	token.AccessToken = jwt.Raw
+
+	cookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    jwt.Raw,
+		Expires:  time.Now().Add(12 * time.Hour), // Set an expiration time
+		Path:     "/",                            // Make the cookie available to all paths
+		HttpOnly: true,
+		// Secure: true,
+	}
+
+	http.SetCookie(w, cookie)
+
 	return json.NewEncoder(w).Encode(token)
 }

@@ -1,0 +1,37 @@
+{{define "main"}}
+<main>
+  <div class="login-wrapper">
+    <div class="login-box">
+      <h1 class="login-title">Login</h1>
+      <form class="login-form" id="loginForm">
+        <label class="input-label" for="username">Username:</label><br>
+        <input class="input" type="text" id="username" name="username"><br>
+        <label class="input-label" for="password">Password:</label><br>
+        <input class="input" type="password" id="password" name="password"><br><br>
+        <button class="submit-button" type="button" id="loginButton">Submit</button>
+      </form>
+    </div>
+  </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const loginForm = document.getElementById('loginForm');
+  const loginButton = document.getElementById('loginButton');
+
+  loginForm.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      handleLogin();
+    }
+  });
+  loginButton.addEventListener('click', function() {
+    handleLogin();
+  });
+});
+
+function handleLogin() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    jsonPost("/api/login", {username: username, password: password}, "Login Failed!", "/")
+}
+</script>
+</main>
+{{end}}
