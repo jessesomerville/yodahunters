@@ -14,7 +14,7 @@ import (
 )
 
 func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) error {
-	q := `SELECT id, title, body, created_at FROM threads`
+	q := `SELECT id, author_id, title, body, created_at FROM threads`
 	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (s *Server) apiHandleGetThreadByID(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
 	}
 
-	q := `SELECT id, title, body, created_at FROM threads WHERE id = $1`
+	q := `SELECT thread_id, author_id, title, body, created_at FROM threads WHERE id = $1`
 	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, id)
 	if err != nil {
 		return err
@@ -48,11 +48,11 @@ func (s *Server) apiHandlePostThreads(w http.ResponseWriter, r *http.Request) er
 	}
 
 	const q = `
-	INSERT INTO threads (title, body)
-	VALUES ($1, $2)
-	RETURNING id, title, body, created_at`
+	INSERT INTO threads (title, body, author_id)
+	VALUES ($1, $2, $3)
+	RETURNING thread_id, author_id, title, body, created_at`
 
-	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, t.Title, t.Body)
+	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, t.Title, t.Body, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}

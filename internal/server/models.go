@@ -23,9 +23,10 @@ type User struct {
 
 // Thread is a simplified struct for testing thread functionality.
 type Thread struct {
-	ID        int       `json:"id,omitempty" db:"id"`
-	Title     string    `json:"Title" db:"title"`
-	Body      string    `json:"Body" db:"body"`
+	ID        int       `json:"thread_id,omitempty" db:"thread_id"`
+	Title     string    `json:"title" db:"title"`
+	Body      string    `json:"body" db:"body"`
+	AuthorID  string    `json:"author_id,omitempty" db:"author_id"`
 	CreatedAt time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 

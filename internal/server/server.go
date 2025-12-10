@@ -84,7 +84,7 @@ func Run(ctx context.Context, cfg Config) error {
 	apiMux := http.NewServeMux()
 	apiMux.Handle("GET /threads", middleware.ErrorHandler(s.apiHandleGetThreads))
 	apiMux.Handle("GET /threads/{id}", middleware.ErrorHandler(s.apiHandleGetThreadByID))
-	apiMux.Handle("POST /threads", middleware.ErrorHandler(s.apiHandlePostThreads))
+	apiMux.Handle("POST /threads", middleware.MiddlewareChain(s.apiHandlePostThreads, s.jwtSecret))
 	// TODO: delete
 	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.apiHandleRegister))
 	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.apiHandleLogin))
