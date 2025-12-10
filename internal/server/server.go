@@ -78,7 +78,7 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", middleware.AuthorizationHandler(middleware.ErrorHandler(s.handleHome), s.jwtSecret))
+	mux.Handle("/", middleware.MiddlewareChain(s.handleHome, s.jwtSecret))
 	mux.Handle("/login", middleware.ErrorHandler(s.handleLogin))
 
 	apiMux := http.NewServeMux()
@@ -88,6 +88,8 @@ func Run(ctx context.Context, cfg Config) error {
 	// TODO: delete
 	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.apiHandleRegister))
 	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.apiHandleLogin))
+
+	apiMux.HandleFunc("GET /me", middleware.MiddlewareChain(s.apiHandleMe, s.jwtSecret))
 
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
