@@ -14,7 +14,7 @@ import (
 )
 
 func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) error {
-	q := `SELECT id, author_id, title, body, created_at FROM threads`
+	q := `SELECT thread_id, author_id, title, body, created_at FROM threads`
 	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q)
 	if err != nil {
 		return err
