@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/jessesomerville/yodahunters/internal/pg"
+	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) error {
-	q := `SELECT id, title, body, created_at FROM threads`
+	q := `SELECT thread_id, author_id, title, body, created_at FROM threads`
 	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q)
 	if err != nil {
 		return err
@@ -27,7 +28,7 @@ func (s *Server) apiHandleGetThreadByID(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
 	}
 
-	q := `SELECT id, title, body, created_at FROM threads WHERE id = $1`
+	q := `SELECT thread_id, author_id, title, body, created_at FROM threads WHERE id = $1`
 	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, id)
 	if err != nil {
 		return err
@@ -47,11 +48,11 @@ func (s *Server) apiHandlePostThreads(w http.ResponseWriter, r *http.Request) er
 	}
 
 	const q = `
-	INSERT INTO threads (title, body)
-	VALUES ($1, $2)
-	RETURNING id, title, body, created_at`
+	INSERT INTO threads (title, body, author_id)
+	VALUES ($1, $2, $3)
+	RETURNING thread_id, author_id, title, body, created_at`
 
-	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, t.Title, t.Body)
+	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, t.Title, t.Body, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}
@@ -137,7 +138,7 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	jwt, err := GenerateJWT(id, s.jwtSecret)
+	jwt, err := middleware.GenerateJWT(id, s.jwtSecret)
 	if err != nil {
 		return err
 	}
@@ -158,4 +159,15 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 	http.SetCookie(w, cookie)
 
 	return json.NewEncoder(w).Encode(token)
+}
+
+func (s *Server) apiHandleMe(w http.ResponseWriter, r *http.Request) error {
+	const q = "SELECT id, username, email, created_at FROM users WHERE id = $1"
+	row, err := s.dbClient.QueryRow(r.Context(), q, r.Context().Value(middleware.CtxUserKey))
+	if err != nil {
+		return err
+	}
+	var user User
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
+	return json.NewEncoder(w).Encode(user)
 }
