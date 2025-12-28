@@ -30,6 +30,15 @@ type Thread struct {
 	CreatedAt time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 
+// A Comment is a post responding to a thread
+type Comment struct {
+	ID        int       `json:"comment_id,omitempty" db:"comment_id"`
+	ThreadID  int       `json:"thread_id,omitempty" db:"thread_id"`
+	AuthorID  int       `json:"author_id,omitempty" db:"author_id"`
+	Body      string    `json:"body" db:"body"`
+	CreatedAt time.Time `json:"created_at,omitempty" db:"created_at"`
+}
+
 // GeneratePasswordHash adds a hashed password to a User struct if  there is a
 // password in the struct, and a password hash is not already present.
 func (u *User) GeneratePasswordHash() error {

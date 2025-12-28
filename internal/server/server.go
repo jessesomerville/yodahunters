@@ -81,11 +81,17 @@ func Run(ctx context.Context, cfg Config) error {
 	mux.Handle("/", middleware.Chain(s.handleHome, s.jwtSecret))
 	mux.Handle("/login", middleware.ErrorHandler(s.handleLogin))
 
+	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
 	apiMux.Handle("GET /threads", middleware.ErrorHandler(s.apiHandleGetThreads))
 	apiMux.Handle("GET /threads/{id}", middleware.ErrorHandler(s.apiHandleGetThreadByID))
+	apiMux.Handle("GET /threads/{id}/comments", middleware.ErrorHandler(s.apiHandleGetCommentsByThreadID))
 	apiMux.Handle("POST /threads", middleware.Chain(s.apiHandlePostThreads, s.jwtSecret))
-	// TODO: delete
+	// TODO?: delete
+
+	apiMux.Handle("POST /comments", middleware.Chain(s.apiHandlePostComments, s.jwtSecret))
+	apiMux.Handle("GET /comments/{id}", middleware.ErrorHandler(s.apiHandleGetCommentByID))
+
 	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.apiHandleRegister))
 	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.apiHandleLogin))
 

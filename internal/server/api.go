@@ -171,3 +171,54 @@ func (s *Server) apiHandleMe(w http.ResponseWriter, r *http.Request) error {
 	row.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
 	return json.NewEncoder(w).Encode(user)
 }
+
+func (s *Server) apiHandlePostComments(w http.ResponseWriter, r *http.Request) error {
+	reqBody, err := io.ReadAll(r.Body)
+	r.Body.Close()
+	if err != nil {
+		return err
+	}
+	var c Comment
+	if err := json.Unmarshal(reqBody, &c); err != nil {
+		return err
+	}
+
+	const q = `
+	INSERT INTO comments (thread_id, body, author_id)
+	VALUES ($1, $2, $3)
+	RETURNING comment_id, thread_id, author_id, body, created_at`
+
+	comment, err := pg.QueryRowToStruct[Comment](r.Context(), s.dbClient, q, c.ThreadID, c.Body, r.Context().Value(middleware.CtxUserKey))
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(comment)
+}
+
+func (s *Server) apiHandleGetCommentsByThreadID(w http.ResponseWriter, r *http.Request) error {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
+	}
+
+	q := `SELECT comment_id, thread_id, author_id, body, created_at FROM comments WHERE thread_id = $1`
+	comments, err := pg.QueryRowsToStruct[Comment](r.Context(), s.dbClient, q, id)
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(comments)
+}
+
+func (s *Server) apiHandleGetCommentByID(w http.ResponseWriter, r *http.Request) error {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+
+	q := `SELECT comment_id, thread_id, author_id, body, created_at FROM comments WHERE comment_id = $1`
+	comment, err := pg.QueryRowToStruct[Comment](r.Context(), s.dbClient, q, id)
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(comment)
+}
