@@ -1,0 +1,13 @@
+-- create_comments_table (2025-12-28)
+
+BEGIN;
+
+CREATE TABLE comments (
+  comment_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  thread_id INT NOT NULL REFERENCES threads(thread_id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  author_id INT NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+END;
