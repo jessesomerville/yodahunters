@@ -11,7 +11,7 @@ shift 2
 token_response=`curl -sS -X POST -d "{\"username\":\"$username\", \"password\":\"$password\"}" http://localhost:8080/api/login`
 if [[ $token_response =~ $token_regex ]] 
 then
-    curl --cookie access_token=$BASH_REMATCH[1] "$@"
+    curl --cookie access_token=${BASH_REMATCH[1]} "$@"
 else
     echo "Failed to login!"
 fi

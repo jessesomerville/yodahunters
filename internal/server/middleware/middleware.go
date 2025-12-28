@@ -4,6 +4,8 @@ package middleware
 import (
 	"context"
 	"net/http"
+
+	"github.com/jessesomerville/yodahunters/internal/log"
 )
 
 type ctxKey string
@@ -19,6 +21,8 @@ func AuthorizationHandler(next http.HandlerFunc, secret []byte) http.HandlerFunc
 		userID, err := Authorize(r, secret)
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
+			log.Errorf(r.Context(), "Authorization Failed!")
+			return
 		}
 		ctx := context.WithValue(r.Context(), CtxUserKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
