@@ -30,7 +30,7 @@ type Thread struct {
 	CreatedAt time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 
-// A Comment is a post responding to a thread
+// A Comment is a post responding to a thread.
 type Comment struct {
 	ID        int       `json:"comment_id,omitempty" db:"comment_id"`
 	ThreadID  int       `json:"thread_id,omitempty" db:"thread_id"`
