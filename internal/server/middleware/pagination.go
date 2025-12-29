@@ -21,8 +21,10 @@ func GetPageData(r *http.Request) (Page, error) {
 		size, err := strconv.Atoi(size_param)
 		if err != nil {
 			return page, err
-		} else if size > 0 {
+		} else if size > 0 && size < 100 {
 			page.Size = size
+		} else if size > 100 {
+			page.Size = 100
 		}
 	}
 
