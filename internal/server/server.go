@@ -83,14 +83,14 @@ func Run(ctx context.Context, cfg Config) error {
 
 	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
-	apiMux.Handle("GET /threads", middleware.ErrorHandler(s.apiHandleGetThreads))
-	apiMux.Handle("GET /threads/{id}", middleware.ErrorHandler(s.apiHandleGetThreadByID))
-	apiMux.Handle("GET /threads/{id}/comments", middleware.ErrorHandler(s.apiHandleGetCommentsByThreadID))
+	apiMux.Handle("GET /threads", middleware.Chain(s.apiHandleGetThreads, s.jwtSecret))
+	apiMux.Handle("GET /threads/{id}", middleware.Chain(s.apiHandleGetThreadByID, s.jwtSecret))
+	apiMux.Handle("GET /threads/{id}/comments", middleware.Chain(s.apiHandleGetCommentsByThreadID, s.jwtSecret))
 	apiMux.Handle("POST /threads", middleware.Chain(s.apiHandlePostThreads, s.jwtSecret))
 	// TODO?: delete
 
 	apiMux.Handle("POST /comments", middleware.Chain(s.apiHandlePostComments, s.jwtSecret))
-	apiMux.Handle("GET /comments/{id}", middleware.ErrorHandler(s.apiHandleGetCommentByID))
+	apiMux.Handle("GET /comments/{id}", middleware.Chain(s.apiHandleGetCommentByID, s.jwtSecret))
 
 	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.apiHandleRegister))
 	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.apiHandleLogin))
