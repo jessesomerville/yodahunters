@@ -13,6 +13,9 @@ type ctxKey string
 // CtxUserKey is used to set and retrieve the user ID from a request context.
 const CtxUserKey ctxKey = "userID"
 
+// CtxPageKey is used to set and retrieve page data
+const CtxPageKey ctxKey = "page"
+
 // AuthorizationHandler verifies that a request has a valid access token in the
 // cookie, retrieves the user_id set in the access token, and adds the user_id
 // to the request context.
@@ -29,8 +32,19 @@ func AuthorizationHandler(next http.HandlerFunc, secret []byte) http.HandlerFunc
 	}
 }
 
+func PageHandler(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page, err := GetPageData(r)
+		if err != nil {
+			log.Errorf(r.Context(), "Pagination Failed!")
+		}
+		ctx := context.WithValue(r.Context(), CtxPageKey, page)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+}
+
 // Chain links all the middleware handlers together to make it convenient to call them all
 // in a row.
 func Chain(f func(w http.ResponseWriter, r *http.Request) error, jwtSecret []byte) http.HandlerFunc {
-	return AuthorizationHandler(ErrorHandler(f), jwtSecret)
+	return AuthorizationHandler(PageHandler(ErrorHandler(f)), jwtSecret)
 }

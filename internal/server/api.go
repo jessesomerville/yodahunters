@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jessesomerville/yodahunters/internal/pg"
@@ -13,8 +14,25 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// This is ugly but I think it is one of the faster ways to do, and a lot
+// of requests are going to hit it
+func pageBuilder(q string, r *http.Request) string {
+	var sb strings.Builder
+	var page middleware.Page
+	page = r.Context().Value(middleware.CtxPageKey).(middleware.Page)
+	offset := strconv.Itoa(page.Size * (page.Number - 1))
+	size := strconv.Itoa(page.Size)
+	sb.WriteString(q)
+	sb.WriteString(" ORDER BY created_at DESC")
+	sb.WriteString(" OFFSET ")
+	sb.WriteString(offset)
+	sb.WriteString(" LIMIT ")
+	sb.WriteString(size)
+	return sb.String()
+}
+
 func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) error {
-	q := `SELECT thread_id, author_id, title, body, created_at FROM threads`
+	q := pageBuilder(`SELECT thread_id, author_id, title, body, created_at FROM threads`, r)
 	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q)
 	if err != nil {
 		return err
@@ -28,7 +46,7 @@ func (s *Server) apiHandleGetThreadByID(w http.ResponseWriter, r *http.Request) 
 		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
 	}
 
-	q := `SELECT thread_id, author_id, title, body, created_at FROM threads WHERE id = $1`
+	q := pageBuilder(`SELECT thread_id, author_id, title, body, created_at FROM threads WHERE id = $1`, r)
 	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, id)
 	if err != nil {
 		return err
@@ -201,7 +219,7 @@ func (s *Server) apiHandleGetCommentsByThreadID(w http.ResponseWriter, r *http.R
 		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
 	}
 
-	q := `SELECT comment_id, thread_id, author_id, body, created_at FROM comments WHERE thread_id = $1`
+	q := pageBuilder(`SELECT comment_id, thread_id, author_id, body, created_at FROM comments WHERE thread_id = $1`, r)
 	comments, err := pg.QueryRowsToStruct[Comment](r.Context(), s.dbClient, q, id)
 	if err != nil {
 		return err
