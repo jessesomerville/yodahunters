@@ -140,14 +140,15 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	const q = "SELECT id, pw_hash FROM users WHERE username = $1"
+	const q = "SELECT id, pw_hash, is_admin FROM users WHERE username = $1"
 	row, err := s.dbClient.QueryRow(r.Context(), q, login.Username)
 	if err != nil {
 		return err
 	}
 	var id int
 	var passwordHash []byte
-	if err = row.Scan(&id, &passwordHash); err != nil {
+	var isAdmin bool
+	if err = row.Scan(&id, &passwordHash, &isAdmin); err != nil {
 		return err
 	}
 
@@ -156,7 +157,7 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	jwt, err := middleware.GenerateJWT(id, s.jwtSecret)
+	jwt, err := middleware.GenerateJWT(id, isAdmin, s.jwtSecret)
 	if err != nil {
 		return err
 	}

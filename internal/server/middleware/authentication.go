@@ -17,8 +17,9 @@ type joseHeader struct {
 }
 
 type jwsPayload struct {
-	UserID int `json:"user_id"`
-	Exp    int `json:"exp"`
+	UserID  int  `json:"user_id"`
+	IsAdmin bool `json:"is_admin"`
+	Exp     int  `json:"exp"`
 }
 
 // JWT is a struct that holds the relevant data for handling JWTs.
@@ -34,7 +35,7 @@ type JWT struct {
 //
 //	Header: {"alg":"HS256", "typ":"JWT"}
 //	Claims: {"user_id": user_id, "exp": [current time + 12hrs]}
-func GenerateJWT(userID int, secret []byte) (JWT, error) {
+func GenerateJWT(userID int, isAdmin bool, secret []byte) (JWT, error) {
 	// Set the header and payload
 	jwt := JWT{
 		Header: joseHeader{
@@ -42,8 +43,9 @@ func GenerateJWT(userID int, secret []byte) (JWT, error) {
 			Typ: "JWT",
 		},
 		Payload: jwsPayload{
-			UserID: userID,
-			Exp:    int((time.Now().Add(12 * time.Hour)).Unix()),
+			UserID:  userID,
+			IsAdmin: isAdmin,
+			Exp:     int((time.Now().Add(12 * time.Hour)).Unix()),
 		},
 		Signature: nil,
 		Raw:       "",

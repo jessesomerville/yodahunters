@@ -26,3 +26,24 @@ func Authorize(r *http.Request, secret []byte) (int, error) {
 
 	return jwt.Payload.UserID, nil
 }
+
+func IsAdmin(r *http.Request, secret []byte) (bool, error) {
+	accessToken, err := r.Cookie("access_token")
+	if err != nil {
+		return false, err
+	}
+	jwt, err := ParseJWT(accessToken.Value)
+	if err != nil {
+		return false, err
+	}
+	valid, err := jwt.IsValid(secret)
+	if err != nil {
+		return false, err
+	}
+	if !valid {
+		return false, errors.New("invalid JWT")
+	}
+
+	return jwt.Payload.IsAdmin, nil
+
+}

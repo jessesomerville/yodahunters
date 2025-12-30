@@ -80,6 +80,8 @@ func Run(ctx context.Context, cfg Config) error {
 	mux := http.NewServeMux()
 	mux.Handle("/", middleware.Chain(s.handleHome, s.jwtSecret))
 	mux.Handle("/login", middleware.ErrorHandler(s.handleLogin))
+	// TESTING ROUTE - DELETE ME
+	mux.Handle("/admin_test", middleware.AdminChain(s.handleAdminTest, s.jwtSecret))
 
 	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
@@ -128,4 +130,9 @@ func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl stri
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	err := s.serveHTML(r.Context(), w, "login", nil)
 	return err
+}
+
+func (s *Server) handleAdminTest(w http.ResponseWriter, r *http.Request) error {
+	fmt.Fprintf(w, "Hello Admin!")
+	return nil
 }
