@@ -11,5 +11,6 @@ require (
 require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/tjarratt/babble v0.0.0-20210505082055-cbca2a4833c1 // indirect
 	golang.org/x/text v0.24.0 // indirect
 )
