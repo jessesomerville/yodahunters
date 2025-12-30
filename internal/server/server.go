@@ -80,8 +80,6 @@ func Run(ctx context.Context, cfg Config) error {
 	mux := http.NewServeMux()
 	mux.Handle("/", middleware.Chain(s.handleHome, s.jwtSecret))
 	mux.Handle("/login", middleware.ErrorHandler(s.handleLogin))
-	// TESTING ROUTE - DELETE ME
-	mux.Handle("/admin_test", middleware.AdminChain(s.handleAdminTest, s.jwtSecret))
 
 	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
