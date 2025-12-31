@@ -66,11 +66,11 @@ func (s *Server) apiHandlePostThreads(w http.ResponseWriter, r *http.Request) er
 	}
 
 	const q = `
-	INSERT INTO threads (title, body, author_id)
-	VALUES ($1, $2, $3)
-	RETURNING thread_id, author_id, title, body, created_at`
+	INSERT INTO threads (title, body, category_id, author_id)
+	VALUES ($1, $2, $3, $4)
+	RETURNING thread_id, author_id, category_id, title, body, created_at`
 
-	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, t.Title, t.Body, r.Context().Value(middleware.CtxUserKey))
+	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, t.Title, t.Body, t.CategoryID, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}
@@ -240,4 +240,35 @@ func (s *Server) apiHandleGetCommentByID(w http.ResponseWriter, r *http.Request)
 		return err
 	}
 	return json.NewEncoder(w).Encode(comment)
+}
+
+func (s *Server) apiHandleGetCategories(w http.ResponseWriter, r *http.Request) error {
+	q := `SELECT category_id, title, description FROM categories`
+	categories, err := pg.QueryRowsToStruct[Category](r.Context(), s.dbClient, q)
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(categories)
+}
+
+func (s *Server) apiHandlePostCategories(w http.ResponseWriter, r *http.Request) error {
+	reqBody, err := io.ReadAll(r.Body)
+	r.Body.Close()
+	if err != nil {
+		return err
+	}
+	var c Category
+	if err := json.Unmarshal(reqBody, &c); err != nil {
+		return err
+	}
+	const q = `
+	INSERT INTO categories (title, description, author_id)
+	VALUES ($1, $2)
+	RETURNING category_id, title, description, author_id, created_at`
+
+	category, err := pg.QueryRowToStruct[Category](r.Context(), s.dbClient, q, c.Title, c.Description, r.Context().Value(middleware.CtxUserKey))
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(category)
 }

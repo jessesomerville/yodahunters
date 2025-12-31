@@ -66,7 +66,7 @@ func main() {
 		for j := 0; j < numThreads; j++ {
 			title := babbler.Babble()
 			body := babbler.Babble()
-			threadBody := fmt.Sprintf(`{"title": "%s", "body": "%s"}`, title, body)
+			threadBody := fmt.Sprintf(`{"title": "%s", "body": "%s", "category_id": 1}`, title, body)
 			threadResp, err := client.Post(postThreadURL, "application/json", strings.NewReader(threadBody))
 			if err != nil {
 				fmt.Println("Error posting thread:", err)

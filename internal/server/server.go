@@ -89,6 +89,9 @@ func Run(ctx context.Context, cfg Config) error {
 	apiMux.Handle("POST /threads", middleware.Chain(s.apiHandlePostThreads, s.jwtSecret))
 	// TODO?: delete
 
+	apiMux.HandleFunc("POST /categories", middleware.AdminChain(s.apiHandlePostCategories, s.jwtSecret))
+	apiMux.HandleFunc("GET /categories", middleware.Chain(s.apiHandleGetCategories, s.jwtSecret))
+
 	apiMux.Handle("POST /comments", middleware.Chain(s.apiHandlePostComments, s.jwtSecret))
 	apiMux.Handle("GET /comments/{id}", middleware.Chain(s.apiHandleGetCommentByID, s.jwtSecret))
 
