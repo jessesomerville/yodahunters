@@ -2,6 +2,6 @@
 
 BEGIN;
 
--- Add the migration here.
+ALTER TABLE users DROP COLUMN is_admin;
 
 END;

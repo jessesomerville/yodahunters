@@ -34,6 +34,11 @@ body {
   color: #430303;
 }
 
+.wrap {
+  max-width: 1500px;
+  margin: auto;
+}
+
 .site-header {
   background: radial-gradient(circle, #A31914 0%, #62FB40 100%);
   box-shadow: inset 0 0 5px 1px #62FB40, 0px 1px 2px 1px;
@@ -230,6 +235,14 @@ body {
 }
 
 .threadbox-author-cell {
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 300px;
+  padding-left: 5px;
+}
+
+.threadbox-replies-cell {
   text-align: center;
 }
 
@@ -251,6 +264,10 @@ body {
   max-width: 200px;
   padding-left: 5px;
 }/*# sourceMappingURL=style.css.map */
+
+.threadbox-lastpost-ts {
+  margin: 3px;
+}
 
 .login-wrapper {
   display: grid;
@@ -307,3 +324,4 @@ body {
   color:#f8d671;
   background: #A31914;
 }
+
