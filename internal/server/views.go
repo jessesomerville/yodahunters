@@ -16,19 +16,21 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	offset := strconv.Itoa(page.Size * (page.Number - 1))
 	size := strconv.Itoa(page.Size)
 
-	// For each thread, we need: TODO[Category], Title, Author Name, Number of Replies, TODO[Rating], Latest Comment
+	// For each thread, we need: CategoryID, Title, Author Name, Number of Replies, TODO[Rating], Latest Comment
 	type threadView struct {
-		// Category string
+		CategoryID int    `db:"category_id"`
 		Title      string `db:"title"`
 		AuthorName string `db:"username"`
 		ReplyCount int    `db:"reply_count"`
 		// Rating int
 		LatestComment string    `db:"latest_comment"`
 		LatestTS      time.Time `db:"latest_ts"`
+		LatestTSFmt   string    `db:"-"`
 	}
 	// Create a SQL query that gives us the right rows from each table
 	q := `
 	SELECT 
+		threads.category_id,
 		threads.title,
 		users.username,
 		(SELECT COUNT(*) FROM comments WHERE comments.thread_id = threads.thread_id) AS reply_count,
@@ -45,6 +47,10 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	for i := range threadViews {
+		threadViews[i].LatestTSFmt = threadViews[i].LatestTS.Format("Jan 2 2006 03:04:05 PM")
+	}
+
 	data := struct {
 		ThreadViews []threadView
 		HTMLTitle   string

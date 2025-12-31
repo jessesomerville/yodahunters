@@ -32,9 +32,11 @@ type Thread struct {
 }
 
 type Category struct {
-	ID          int    `json:"category_id,omitempty" db:"category_id"`
-	Title       string `json:"title" db:"title"`
-	Description string `json:"description" db:"description"`
+	ID          int       `json:"category_id,omitempty" db:"category_id"`
+	Title       string    `json:"title" db:"title"`
+	Description string    `json:"description" db:"description"`
+	AuthorID    int       `json:"author_id,omitempty" db:"author_id"`
+	CreatedAt   time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 
 // A Comment is a post responding to a thread.

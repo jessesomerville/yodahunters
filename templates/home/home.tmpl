@@ -3,8 +3,7 @@
     <div class="word-up">
       <p class="word-up-title">What's on your mind?</p>
       <p class="word-up-content">
-        I'm thinking in this box we'll have a little user submitted blurb that get's refreshed every so often. 
-        We can have people submit as many as they want and load them into a queue or something.
+        This part of the website is coming soon..
       </p>
     </div>
     <div class="threadbox">
@@ -23,7 +22,7 @@
         </tr>
         <tr class="threadbox-row">
           <td class="threadbox-icon-cell">
-            <img class="posticon" src="/static/img/posticons/balls.gif">
+            <img class="caticon" src="/static/img/categories/{{.CategoryID}}.gif">
           </td>
           <td class="threadbox-title-cell">
             <a href="#">{{.Title}}</a>
@@ -31,7 +30,7 @@
           <td class="threadbox-author-cell">
             <a href="#">{{.AuthorName}}</a>
           </td>
-          <td>
+          <td class="threadbox-replies-cell">
             {{.ReplyCount}}
           </td>
           <td class="threadbox-rating-cell">
@@ -40,6 +39,7 @@
             </div>
           </td>
           <td class="threadbox-lastpost-cell">
+          <p class="threadbox-lastpost-ts">{{.LatestTSFmt}}</p>
           <a href="#">{{.LatestComment}}</a>
           </td>
         </tr>
