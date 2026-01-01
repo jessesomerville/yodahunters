@@ -1,0 +1,48 @@
+{{define "main"}}
+<main>
+  <div class="newthread-wrapper">
+    <div class="newthread-box">
+      <h1 class="newthread-title">Create a Thread</h1>
+      <form class="newthread-form" id="newThreadForm">
+        <label class="input-label" for="title">Title:</label><br>
+        <input class="input" type="text" id="title" name="title" required><br>
+        <label class="input-label" for="categorySelect">Category:</label><br>
+        <select class="paginator-select" id="categorySelect" name="categorySelect" required>
+        <optgroup>
+        <option value="">Select a Category</option>
+        {{ range .CategoryData}}
+        <option value="{{ .ID }}">{{ .Title }}</option>
+        {{ end }}
+        </optgroup>
+        </select>
+        <label class="input-label" for="body">Body:</label><br>
+        <textarea class="textarea-input" id="body" name="body" required></textarea>br><br>
+        <button class="submit-button" type="button" id="newThreadSubmitButton">Create Thread</button>
+      </form>
+    </div>
+  </div>
+<script>
+/*
+document.addEventListener('DOMContentLoaded', function() {
+  const loginForm = document.getElementById('loginForm');
+  const loginButton = document.getElementById('loginButton');
+
+  loginForm.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      handleLogin();
+    }
+  });
+  loginButton.addEventListener('click', function() {
+    handleLogin();
+  });
+});
+
+function handleLogin() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    jsonPost("/api/login", {username: username, password: password}, "Login Failed!", "/")
+}
+*/
+</script>
+</main>
+{{ end }}

@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jessesomerville/yodahunters/internal/log"
 	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 )
@@ -37,7 +36,6 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	for i := range pages {
 		pages[i] = i + 1
 	}
-	log.Infof(r.Context(), "Page Number: %d, Page Size: %d, Total Items: %d, Total Pages: %d", page.Number, page.Size, threadCount, len(pages))
 
 	// For each thread, we need: CategoryID, Title, Author Name, Number of Replies, TODO[Rating], Latest Comment
 	type threadView struct {
@@ -89,5 +87,27 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	err = s.serveHTML(r.Context(), w, "home", data)
+	return err
+}
+
+func (s *Server) handleNewThread(w http.ResponseWriter, r *http.Request) error {
+
+	// I think it's simpler to just make entire Category structs as opposed to
+	// defining a custom struct with just id and title to hold the data we need.
+	q := `SELECT category_id, title, description, author_id, created_at FROM categories`
+	categoryData, err := pg.QueryRowsToStruct[Category](r.Context(), s.dbClient, q)
+	if err != nil {
+		return err
+	}
+
+	data := struct {
+		CategoryData []Category
+		HTMLTitle    string
+	}{
+		HTMLTitle:    "new thread",
+		CategoryData: categoryData,
+	}
+
+	err = s.serveHTML(r.Context(), w, "new_thread", data)
 	return err
 }
