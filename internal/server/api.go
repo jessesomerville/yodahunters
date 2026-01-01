@@ -15,7 +15,7 @@ import (
 )
 
 // This is ugly but I think it is one of the faster ways to do, and a lot
-// of requests are going to hit it
+// of requests are going to hit it.
 func pageBuilder(q string, r *http.Request) string {
 	var sb strings.Builder
 	var page middleware.Page
