@@ -21,7 +21,7 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 
-// Thread is a simplified struct for testing thread functionality.
+// Thread is a struct that holds all the data needed for thread functionality.
 type Thread struct {
 	ID         int       `json:"thread_id,omitempty" db:"thread_id"`
 	Title      string    `json:"title" db:"title"`
@@ -31,6 +31,7 @@ type Thread struct {
 	CreatedAt  time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 
+// Category is a struct for managing categories in the app.
 type Category struct {
 	ID          int       `json:"category_id,omitempty" db:"category_id"`
 	Title       string    `json:"title" db:"title"`

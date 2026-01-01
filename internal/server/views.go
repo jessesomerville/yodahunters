@@ -11,6 +11,8 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 )
 
+// PageData is a struct that stores the data necessary to handle
+// paging in our templates.
 type PageData struct {
 	PageNumber int
 	PageSize   int

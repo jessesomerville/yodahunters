@@ -63,7 +63,7 @@ func PageHandler(next http.HandlerFunc) http.HandlerFunc {
 func AdminHandler(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		isAdmin := r.Context().Value(CtxAdminKey)
-		if isAdmin != true {
+		if !(isAdmin).(bool) {
 			log.Errorf(r.Context(), "Admin authorization Failed!")
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
@@ -78,6 +78,8 @@ func Chain(f func(w http.ResponseWriter, r *http.Request) error, jwtSecret []byt
 	return AuthorizationHandler(PageHandler(ErrorHandler(f)), jwtSecret)
 }
 
+// AdminChain includes an additional check for the is_admin flag stored in the JWT for a request.
+// This chain is for endpoints that should only be accessible to Admins.
 func AdminChain(f func(w http.ResponseWriter, r *http.Request) error, jwtSecret []byte) http.HandlerFunc {
 	return AuthorizationHandler(PageHandler(AdminHandler(ErrorHandler(f))), jwtSecret)
 }
