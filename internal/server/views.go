@@ -91,7 +91,6 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleNewThread(w http.ResponseWriter, r *http.Request) error {
-
 	// I think it's simpler to just make entire Category structs as opposed to
 	// defining a custom struct with just id and title to hold the data we need.
 	q := `SELECT category_id, title, description, author_id, created_at FROM categories`
