@@ -11,7 +11,7 @@ import (
 	"github.com/tjarratt/babble"
 )
 
-// Create a bunch of dummy data by sending requests to the API
+// Create a bunch of dummy data by sending requests to the API.
 func main() {
 	registerURL := "http://localhost:8080/api/register"
 	loginURL := "http://localhost:8080/api/login"
@@ -38,7 +38,7 @@ func main() {
 		password := babbler.Babble()
 		email := username + "@example.com"
 
-		// Register, login, post some threads, post some comments
+		// Register, login, post some threads, post some comments.
 		fmt.Println("Registering user:", username)
 		registerBody := fmt.Sprintf(`{"username": "%s", "email": "%s", "password": "%s"}`, username, email, password)
 		registerResp, err := client.Post(registerURL, "application/json", strings.NewReader(registerBody))

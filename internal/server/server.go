@@ -132,8 +132,3 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	err := s.serveHTML(r.Context(), w, "login", nil)
 	return err
 }
-
-func (s *Server) handleAdminTest(w http.ResponseWriter, r *http.Request) error {
-	fmt.Fprintf(w, "Hello Admin!")
-	return nil
-}
