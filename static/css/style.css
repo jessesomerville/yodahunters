@@ -359,3 +359,56 @@ a:hover.paginator-button {
   margin-top: 10px;
   margin-bottom: 50px;
 }
+
+.newthread-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.newthread-box {
+  margin-top: 10px;
+  width: auto;
+  border-radius: 6px;
+  box-shadow: 0px 3px 3px 3px;
+  background: #ffedac;
+  padding-left: 5%;
+  padding-right: 5%;
+}
+
+.newthread-form {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.newthread-form > input {
+  max-width: 500px;
+  margin-top: 10px;
+  margin-bottom: 10px
+}
+
+.category-select {
+  height: 40px;
+  font-size: 30px;
+  margin-right: 10px;
+  max-width: 300px;
+  margin: 10px;
+}
+
+.textarea-input {
+  font-family: "IBM Plex Serif";
+  margin: 10px;
+  font-size: 12pt;
+  background-color: #fcf3d0;
+  border: solid 2px #0f419e;
+  border-radius: 3px;
+  box-shadow: 0 0 2px 0px #28073B;
+}
+
+.newthread-submit-button {
+  font-family: "Staatliches";
+  font-size: 14pt;
+  margin: 10px;
+  color:#f8d671;
+  background: #A31914;
+  max-width: 200px;
+}

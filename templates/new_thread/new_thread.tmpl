@@ -4,10 +4,10 @@
     <div class="newthread-box">
       <h1 class="newthread-title">Create a Thread</h1>
       <form class="newthread-form" id="newThreadForm">
-        <label class="input-label" for="title">Title:</label><br>
-        <input class="input" type="text" id="title" name="title" required><br>
-        <label class="input-label" for="categorySelect">Category:</label><br>
-        <select class="paginator-select" id="categorySelect" name="categorySelect" required>
+        <label class="input-label" for="title">Title:</label>
+        <input class="input" type="text" id="title" name="title" required>
+        <label class="input-label" for="categorySelect">Category:</label>
+        <select class="category-select" id="categorySelect" name="categorySelect" required>
         <optgroup>
         <option value="">Select a Category</option>
         {{ range .CategoryData}}
@@ -15,34 +15,35 @@
         {{ end }}
         </optgroup>
         </select>
-        <label class="input-label" for="body">Body:</label><br>
-        <textarea class="textarea-input" id="body" name="body" required></textarea>br><br>
-        <button class="submit-button" type="button" id="newThreadSubmitButton">Create Thread</button>
+        <label class="input-label" for="body">Body:</label>
+        <textarea class="textarea-input" id="body" name="body" rows="10" required></textarea>
+        <button class="newthread-submit-button" type="button" id="newThreadSubmitButton">Create Thread</button>
       </form>
     </div>
   </div>
 <script>
-/*
 document.addEventListener('DOMContentLoaded', function() {
-  const loginForm = document.getElementById('loginForm');
-  const loginButton = document.getElementById('loginButton');
+  const newThreadForm = document.getElementById('newThreadForm');
+  const newThreadSubmitButton = document.getElementById('newThreadSubmitButton');
 
-  loginForm.addEventListener('keydown', function(event) {
+  newThreadForm.addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
-      handleLogin();
+      handlePostThread();
     }
   });
-  loginButton.addEventListener('click', function() {
-    handleLogin();
+  newThreadSubmitButton.addEventListener('click', function() {
+    handlePostThread();
   });
 });
 
-function handleLogin() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    jsonPost("/api/login", {username: username, password: password}, "Login Failed!", "/")
+function handlePostThread() {
+    const title = document.getElementById('title').value;
+    const category_id = Number(document.getElementById('categorySelect').value);
+    const body = document.getElementById('body').value;
+    // TODO: redirect to thread view with thread_id in json response
+    responseJson = jsonPost("/api/threads", {title: title, category_id: category_id, body: body}, "Create Thread Failed!", "/")
+
 }
-*/
 </script>
 </main>
 {{ end }}
