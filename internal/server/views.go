@@ -1,13 +1,21 @@
 package server
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/jessesomerville/yodahunters/internal/log"
 	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 )
+
+type PageData struct {
+	PageNumber int
+	PageSize   int
+	Pages      []int
+}
 
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	// Handle paging
@@ -15,6 +23,19 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	page = r.Context().Value(middleware.CtxPageKey).(middleware.Page)
 	offset := strconv.Itoa(page.Size * (page.Number - 1))
 	size := strconv.Itoa(page.Size)
+
+	q := `SELECT COUNT(*) FROM threads`
+	var threadCount int
+	row, err := s.dbClient.QueryRow(r.Context(), q)
+	if err != nil {
+		return err
+	}
+	row.Scan(&threadCount)
+	pages := make([]int, int(math.Ceil(float64(threadCount)/float64(page.Size))))
+	for i := range pages {
+		pages[i] = i + 1
+	}
+	log.Infof(r.Context(), "Page Number: %d, Page Size: %d, Total Items: %d, Total Pages: %d", page.Number, page.Size, threadCount, len(pages))
 
 	// For each thread, we need: CategoryID, Title, Author Name, Number of Replies, TODO[Rating], Latest Comment
 	type threadView struct {
@@ -28,7 +49,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 		LatestTSFmt   string    `db:"-"`
 	}
 	// Create a SQL query that gives us the right rows from each table
-	q := `
+	q = `
 	SELECT 
 		threads.category_id,
 		threads.title,
@@ -54,9 +75,15 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	data := struct {
 		ThreadViews []threadView
 		HTMLTitle   string
+		PageData    PageData
 	}{
 		ThreadViews: threadViews,
 		HTMLTitle:   "home",
+		PageData: PageData{
+			PageNumber: page.Number,
+			PageSize:   page.Size,
+			Pages:      pages,
+		},
 	}
 
 	err = s.serveHTML(r.Context(), w, "home", data)
