@@ -12,6 +12,7 @@ import (
 )
 
 // Create a bunch of dummy data by sending requests to the API.
+// revive:disable
 func main() {
 	registerURL := "http://localhost:8080/api/register"
 	loginURL := "http://localhost:8080/api/login"
