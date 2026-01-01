@@ -325,3 +325,37 @@ body {
   background: #A31914;
 }
 
+.paginator-wrapper {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  justify-items: end;
+  justify-content: end;
+  margin-top: 10px;
+  margin-right: 20px;
+  margin-left: auto;
+}
+
+.paginator-select {
+  width: 50px;
+  height: 40px;
+  font-size: 30px;
+  margin-right: 10px;
+}
+
+.paginator-button {
+  padding: 1px 6px;
+  border: 1px outset buttonborder;
+  border-radius: 3px;
+  background-color: #fcf3d0;
+  text-decoration: none;
+  margin-right: 10px;
+}
+
+a:hover.paginator-button {
+  background-color: #6AE1F0;
+}
+
+.footer-wrapper {
+  margin-top: 10px;
+  margin-bottom: 50px;
+}
