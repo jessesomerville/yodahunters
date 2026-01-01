@@ -27,6 +27,8 @@ func Authorize(r *http.Request, secret []byte) (int, error) {
 	return jwt.Payload.UserID, nil
 }
 
+// IsAdmin checks the is_admin flag in the JWT to see if a user is
+// an admin.
 func IsAdmin(r *http.Request, secret []byte) (bool, error) {
 	accessToken, err := r.Cookie("access_token")
 	if err != nil {
@@ -45,5 +47,4 @@ func IsAdmin(r *http.Request, secret []byte) (bool, error) {
 	}
 
 	return jwt.Payload.IsAdmin, nil
-
 }

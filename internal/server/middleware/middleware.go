@@ -10,15 +10,16 @@ import (
 
 type ctxKey string
 
-// CtxSecretKey is used to set and retrieve the JWT signing secret
+// CtxSecretKey is used to set and retrieve the JWT signing secret.
 const CtxSecretKey ctxKey = "jwt_secret"
 
 // CtxUserKey is used to set and retrieve the user ID from a request context.
 const CtxUserKey ctxKey = "userID"
 
-// CtxPageKey is used to set and retrieve page data
+// CtxPageKey is used to set and retrieve page data.
 const CtxPageKey ctxKey = "page"
 
+// CtxAdminKey is used to set and retrieve the admin flag.
 const CtxAdminKey ctxKey = "isAdmin"
 
 // AuthorizationHandler verifies that a request has a valid access token in the
@@ -44,6 +45,8 @@ func AuthorizationHandler(next http.HandlerFunc, secret []byte) http.HandlerFunc
 	}
 }
 
+// PageHandler checks the URL for query parameters related to paging
+// and makes them available in the request context.
 func PageHandler(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		page, err := GetPageData(r)
@@ -55,6 +58,8 @@ func PageHandler(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// AdminHandler adds the is_admin flag stored in the JWT
+// to the request context.
 func AdminHandler(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		isAdmin := r.Context().Value(CtxAdminKey)
