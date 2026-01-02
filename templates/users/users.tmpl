@@ -2,10 +2,18 @@
 <main>
   <div class="user-view-wrapper">
     <div class="user-view-box">
-      <h1 class="user-view-username">{{ .Username }}</h1>{{ if .IsAdmin }}<h2 class="user-admin-badge">admin</h2>{{ end }}
+      <h1 class="user-view-username">{{ .Username }}</h1>
+      {{ if .IsAdmin }}
+        <h2 class="user-admin-badge">admin</h2>
+      {{else}}
+        <div class="placeholder-div"></div>
+      {{ end }}
       <img class="user-view-avatar" src="/static/img/pfps/profile_pic_{{ .Avatar }}.png">
-      <p class="user-view-bio">{{ .Bio }}</p>
-      <p class="user-view-regdate">{{ .CreatedAt }}</p>
+      <div class="user-view-bio-box">
+        <h3 class="bio-title">About Me</h3>
+        <p class="user-view-bio">{{ .Bio }}</p>
+      </div>
+      <p class="user-view-regdate"> Registered on: {{ .CreatedAt | fmtDate }}</p>
     </div>
   </div>
 </main>

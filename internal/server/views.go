@@ -19,6 +19,20 @@ type PageData struct {
 	Pages      []int
 }
 
+// HeaderData is a stuct for holding all the bits of data
+// used by all our templates.
+type HeaderData struct {
+	UserID    int
+	HTMLTitle string
+}
+
+func NewHeaderData(title string, r *http.Request) HeaderData {
+	return HeaderData{
+		HTMLTitle: title,
+		UserID:    r.Context().Value(middleware.CtxUserKey).(int),
+	}
+}
+
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	// Handle paging
 	var page middleware.Page
@@ -71,11 +85,11 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 
 	data := struct {
 		ThreadViews []threadView
-		HTMLTitle   string
+		HeaderData  HeaderData
 		PageData    PageData
 	}{
 		ThreadViews: threadViews,
-		HTMLTitle:   "home",
+		HeaderData:  NewHeaderData("home", r),
 		PageData: PageData{
 			PageNumber: page.Number,
 			PageSize:   page.Size,
@@ -98,9 +112,9 @@ func (s *Server) handleNewThread(w http.ResponseWriter, r *http.Request) error {
 
 	data := struct {
 		CategoryData []Category
-		HTMLTitle    string
+		HeaderData   HeaderData
 	}{
-		HTMLTitle:    "new thread",
+		HeaderData:   NewHeaderData("new thread", r),
 		CategoryData: categoryData,
 	}
 
@@ -117,23 +131,26 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	row.Scan(&user.Username, &user.Bio, &user.Avatar, &user.CreatedAt, &isAdmin)
+	if user.Username == "" {
+		return fmt.Errorf("user with id %q not found", r.PathValue("id"))
+	}
 
 	// Passing the avatar id as a string with two leading zeros for use in the template.
 	// This will likely need to be changed when we update to better profile pics.
 	data := struct {
-		Username  string
-		Bio       string
-		Avatar    string
-		IsAdmin   bool
-		CreatedAt time.Time
-		HTMLTitle string
+		Username   string
+		Bio        string
+		Avatar     string
+		IsAdmin    bool
+		CreatedAt  time.Time
+		HeaderData HeaderData
 	}{
-		HTMLTitle: user.Username,
-		Username:  user.Username,
-		Bio:       user.Bio,
-		Avatar:    fmt.Sprintf("%03d", user.Avatar),
-		IsAdmin:   isAdmin,
-		CreatedAt: user.CreatedAt,
+		HeaderData: NewHeaderData(user.Username, r),
+		Username:   user.Username,
+		Bio:        user.Bio,
+		Avatar:     fmt.Sprintf("%03d", user.Avatar),
+		IsAdmin:    isAdmin,
+		CreatedAt:  user.CreatedAt,
 	}
 	err = s.serveHTML(r.Context(), w, "users", data)
 	return err
