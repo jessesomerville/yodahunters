@@ -23,7 +23,9 @@ func New(fs template.TrustedFS) (*Renderer, error) {
 	r := new(Renderer)
 	for _, page := range pages {
 		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
+			// Registering a template function to convert timestamps to formatted strings
 			"fmtTime": fmtTime,
+			"fmtDate": fmtDate,
 		}).ParseFS(fs, "*.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("ParseFS: %v", err)
@@ -58,4 +60,13 @@ func fmtTime(t time.Time) string {
 		panic(err)
 	}
 	return t.In(tz).Format("Jan 2, 2006 03:04:05 PM")
+}
+
+func fmtDate(t time.Time) string {
+	// Everyone is going to be in eastern time for now.
+	tz, err := time.LoadLocation("America/New_York")
+	if err != nil { // Always check errors even if they should not happen.
+		panic(err)
+	}
+	return t.In(tz).Format("Jan 2, 2006")
 }
