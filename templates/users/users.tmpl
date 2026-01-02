@@ -1,0 +1,13 @@
+{{define "main"}}
+<main>
+  <div class="user-view-wrapper">
+    <div class="user-view-box">
+      <h1 class="user-view-username">{{ .Username }}</h1>{{ if .IsAdmin }}<h2 class="user-admin-badge">admin</h2>{{ end }}
+      <img class="user-view-avatar" src="/static/img/pfps/profile_pic_{{ .Avatar }}.png">
+      <p class="user-view-bio">{{ .Bio }}</p>
+      <p class="user-view-regdate">{{ .CreatedAt }}</p>
+    </div>
+  </div>
+</main>
+{{end}}
+    

@@ -18,6 +18,8 @@ type User struct {
 	Email        string    `json:"email,omitempty" db:"email"`
 	Password     string    `json:"password,omitempty"`
 	PasswordHash []byte    `json:"-" db:"pw_hash"`
+	Bio          string    `json:"bio,omitempty" db:"bio"`
+	Avatar       int       `json:"avatar,omitempty" db:"avatar"`
 	CreatedAt    time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 

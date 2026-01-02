@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -46,7 +47,6 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 		// Rating int
 		LatestComment string    `db:"latest_comment"`
 		LatestTS      time.Time `db:"latest_ts"`
-		LatestTSFmt   string    `db:"-"`
 	}
 	// Create a SQL query that gives us the right rows from each table
 	q = `
@@ -67,9 +67,6 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	threadViews, err := pg.QueryRowsToStruct[threadView](r.Context(), s.dbClient, q, offset, size)
 	if err != nil {
 		return err
-	}
-	for i := range threadViews {
-		threadViews[i].LatestTSFmt = threadViews[i].LatestTS.Format("Jan 2 2006 03:04:05 PM")
 	}
 
 	data := struct {
@@ -108,5 +105,36 @@ func (s *Server) handleNewThread(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	err = s.serveHTML(r.Context(), w, "new_thread", data)
+	return err
+}
+
+func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) error {
+	q := `SELECT username, bio, avatar, created_at, is_admin FROM users WHERE id = $1`
+	var user User
+	var isAdmin bool
+	row, err := s.dbClient.QueryRow(r.Context(), q, r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	row.Scan(&user.Username, &user.Bio, &user.Avatar, &user.CreatedAt, &isAdmin)
+
+	// Passing the avatar id as a string with two leading zeros for use in the template.
+	// This will likely need to be changed when we update to better profile pics.
+	data := struct {
+		Username  string
+		Bio       string
+		Avatar    string
+		IsAdmin   bool
+		CreatedAt time.Time
+		HTMLTitle string
+	}{
+		HTMLTitle: user.Username,
+		Username:  user.Username,
+		Bio:       user.Bio,
+		Avatar:    fmt.Sprintf("%03d", user.Avatar),
+		IsAdmin:   isAdmin,
+		CreatedAt: user.CreatedAt,
+	}
+	err = s.serveHTML(r.Context(), w, "users", data)
 	return err
 }
