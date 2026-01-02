@@ -114,15 +114,15 @@ func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 	const insertUser = `
-	INSERT INTO users (username, email, pw_hash)
-	VALUES ($1, $2, $3)
-	RETURNING id, username, email, created_at`
-	row, err = s.dbClient.QueryRow(r.Context(), insertUser, u.Username, u.Email, u.PasswordHash)
+	INSERT INTO users (username, email, pw_hash, bio, avatar)
+	VALUES ($1, $2, $3, $4, $5)
+	RETURNING id, username, email, bio, avatar, created_at`
+	row, err = s.dbClient.QueryRow(r.Context(), insertUser, u.Username, u.Email, u.PasswordHash, u.Bio, u.Avatar)
 	if err != nil {
 		return err
 	}
 	var user User
-	row.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.Avatar, &user.CreatedAt)
 	return json.NewEncoder(w).Encode(user)
 }
 
@@ -180,14 +180,42 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(token)
 }
 
-func (s *Server) apiHandleMe(w http.ResponseWriter, r *http.Request) error {
-	const q = "SELECT id, username, email, created_at FROM users WHERE id = $1"
+func (s *Server) apiHandleGetMe(w http.ResponseWriter, r *http.Request) error {
+	const q = "SELECT id, username, email, bio, avatar, created_at FROM users WHERE id = $1"
 	row, err := s.dbClient.QueryRow(r.Context(), q, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}
+	// I'm using row.Scan instead of QueryRowToStruct to avoid having to deal with
+	// passwords/password hashes
 	var user User
-	row.Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.Avatar, &user.CreatedAt)
+	return json.NewEncoder(w).Encode(user)
+}
+
+func (s *Server) apiHandlePostMe(w http.ResponseWriter, r *http.Request) error {
+	reqBody, err := io.ReadAll(r.Body)
+	r.Body.Close()
+	if err != nil {
+		return err
+	}
+	type userUpdate struct {
+		Bio    string
+		Avatar int
+	}
+	var update userUpdate
+	if err := json.Unmarshal(reqBody, &update); err != nil {
+		return err
+	}
+
+	q := `UPDATE users SET bio = $1, avatar = $2 WHERE id = $3
+	RETURNING id, username, email, bio, avatar, created_at`
+	row, err := s.dbClient.QueryRow(r.Context(), q, update.Bio, update.Avatar, r.Context().Value(middleware.CtxUserKey))
+	if err != nil {
+		return err
+	}
+	var user User
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.Avatar, &user.CreatedAt)
 	return json.NewEncoder(w).Encode(user)
 }
 

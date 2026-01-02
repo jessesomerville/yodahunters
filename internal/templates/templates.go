@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/google/safehtml/template"
 )
@@ -17,11 +18,13 @@ type Renderer struct {
 
 // New returns a Renderer populated with the templates in the given filesystem.
 func New(fs template.TrustedFS) (*Renderer, error) {
-	pages := []string{"home", "login", "new_thread"}
+	pages := []string{"home", "login", "new_thread", "users"}
 
 	r := new(Renderer)
 	for _, page := range pages {
-		t, err := template.New("base.tmpl").ParseFS(fs, "*.tmpl")
+		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
+			"fmtTime": fmtTime,
+		}).ParseFS(fs, "*.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("ParseFS: %v", err)
 		}
@@ -46,4 +49,13 @@ func (r *Renderer) Render(name string, data any) ([]byte, error) {
 		return nil, fmt.Errorf("failed to render template for %q: %v", name, err)
 	}
 	return buf.Bytes(), nil
+}
+
+func fmtTime(t time.Time) string {
+	// Everyone is going to be in eastern time for now.
+	tz, err := time.LoadLocation("America/New_York")
+	if err != nil { // Always check errors even if they should not happen.
+		panic(err)
+	}
+	return t.In(tz).Format("Jan 2, 2006 03:04:05 PM")
 }

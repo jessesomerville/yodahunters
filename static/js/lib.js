@@ -1,5 +1,5 @@
 
-function jsonPost(path, data, error, redir = None) {
+function jsonPost(path, data, error, redir = null) {
     options = {
         method: "POST",
         headers: {
@@ -14,7 +14,7 @@ function jsonPost(path, data, error, redir = None) {
                 alert(error)
                 throw new Error(`HTTP error! status: ${response.status}`);
             } else {
-                if (redir != None)
+                if (redir != null)
                     window.location.href = redir
                 return response.json();
             }

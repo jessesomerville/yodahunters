@@ -81,6 +81,7 @@ func Run(ctx context.Context, cfg Config) error {
 	mux.Handle("/", middleware.Chain(s.handleHome, s.jwtSecret))
 	mux.Handle("/login", middleware.ErrorHandler(s.handleLogin))
 	mux.Handle("/new_thread", middleware.Chain(s.handleNewThread, s.jwtSecret))
+	mux.Handle("GET /users/{id}", middleware.Chain(s.handleUsers, s.jwtSecret))
 
 	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
@@ -99,7 +100,8 @@ func Run(ctx context.Context, cfg Config) error {
 	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.apiHandleRegister))
 	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.apiHandleLogin))
 
-	apiMux.HandleFunc("GET /me", middleware.Chain(s.apiHandleMe, s.jwtSecret))
+	apiMux.HandleFunc("GET /me", middleware.Chain(s.apiHandleGetMe, s.jwtSecret))
+	apiMux.HandleFunc("POST /me", middleware.Chain(s.apiHandlePostMe, s.jwtSecret))
 
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
