@@ -19,6 +19,9 @@ type PageData struct {
 	Pages      []int
 }
 
+// TODO: Refactor so there's a constructor for PageData similar to
+// NewHeaderData.
+
 // HeaderData is a stuct for holding all the bits of data
 // used by all our templates.
 type HeaderData struct {
@@ -123,14 +126,14 @@ func (s *Server) handleNewThread(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) error {
-	q := `SELECT username, bio, avatar, created_at, is_admin FROM users WHERE id = $1`
+	q := `SELECT id, username, bio, avatar, created_at, is_admin FROM users WHERE id = $1`
 	var user User
 	var isAdmin bool
 	row, err := s.dbClient.QueryRow(r.Context(), q, r.PathValue("id"))
 	if err != nil {
 		return err
 	}
-	row.Scan(&user.Username, &user.Bio, &user.Avatar, &user.CreatedAt, &isAdmin)
+	row.Scan(&user.ID, &user.Username, &user.Bio, &user.Avatar, &user.CreatedAt, &isAdmin)
 	if user.Username == "" {
 		return fmt.Errorf("user with id %q not found", r.PathValue("id"))
 	}
@@ -138,19 +141,21 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) error {
 	// Passing the avatar id as a string with two leading zeros for use in the template.
 	// This will likely need to be changed when we update to better profile pics.
 	data := struct {
-		Username   string
-		Bio        string
-		Avatar     string
-		IsAdmin    bool
-		CreatedAt  time.Time
-		HeaderData HeaderData
+		Username       string
+		Bio            string
+		Avatar         string
+		IsAdmin        bool
+		CreatedAt      time.Time
+		HeaderData     HeaderData
+		ShowEditButton bool
 	}{
-		HeaderData: NewHeaderData(user.Username, r),
-		Username:   user.Username,
-		Bio:        user.Bio,
-		Avatar:     fmt.Sprintf("%03d", user.Avatar),
-		IsAdmin:    isAdmin,
-		CreatedAt:  user.CreatedAt,
+		HeaderData:     NewHeaderData(user.Username, r),
+		Username:       user.Username,
+		Bio:            user.Bio,
+		Avatar:         fmt.Sprintf("%03d", user.Avatar),
+		IsAdmin:        isAdmin,
+		CreatedAt:      user.CreatedAt,
+		ShowEditButton: r.Context().Value(middleware.CtxUserKey).(int) == user.ID,
 	}
 	err = s.serveHTML(r.Context(), w, "users", data)
 	return err

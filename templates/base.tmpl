@@ -35,7 +35,7 @@ inluded in the <title> element.
       <meta name="robots" content="noindex">
     {{end}}
     {{block "title" .}}
-      <title>{{if .HTMLTitle}}{{.HTMLTitle}} - {{end}}yodahunters</title>
+      <title>{{if .HeaderData.HTMLTitle}}{{.HeaderData.HTMLTitle}} - {{end}}yodahunters</title>
     {{end}}
     {{block "pre-content" .}}{{end}}
   </head>

@@ -14,6 +14,7 @@
         <p class="user-view-bio">{{ .Bio }}</p>
       </div>
       <p class="user-view-regdate"> Registered on: {{ .CreatedAt | fmtDate }}</p>
+      {{if .ShowEditButton }}<a href="#"><button class="newthread-submit-button" type="button">Edit Profile</button></a>{{ end }}
     </div>
   </div>
 </main>
