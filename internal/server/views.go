@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -29,6 +30,7 @@ type HeaderData struct {
 	HTMLTitle string
 }
 
+// NewHeaderData is a constructor for the HeaderData type.
 func NewHeaderData(title string, r *http.Request) HeaderData {
 	return HeaderData{
 		HTMLTitle: title,
@@ -158,5 +160,50 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) error {
 		ShowEditButton: r.Context().Value(middleware.CtxUserKey).(int) == user.ID,
 	}
 	err = s.serveHTML(r.Context(), w, "users", data)
+	return err
+}
+
+func (s *Server) handleUsersEdit(w http.ResponseWriter, r *http.Request) error {
+	// Query user info for the logged in user.
+	q := `SELECT id, username, bio, avatar, created_at, is_admin FROM users WHERE id = $1`
+	var user User
+	var isAdmin bool
+	row, err := s.dbClient.QueryRow(r.Context(), q, r.Context().Value(middleware.CtxUserKey).(int))
+	if err != nil {
+		return err
+	}
+	row.Scan(&user.ID, &user.Username, &user.Bio, &user.Avatar, &user.CreatedAt, &isAdmin)
+	if user.Username == "" {
+		return fmt.Errorf("user with id %q not found", r.PathValue("id"))
+	}
+
+	// This is a little bit hacky, but it makes managing profile pics
+	// very easy for now.
+	entries, err := os.ReadDir("static/img/pfps")
+	if err != nil {
+		return err
+	}
+	avatarNumbers := make([]string, len(entries))
+	for i := range len(entries) {
+		avatarNumbers[i] = fmt.Sprintf("%03d", i)
+	}
+	data := struct {
+		Username      string
+		Bio           string
+		Avatar        string
+		IsAdmin       bool
+		CreatedAt     time.Time
+		HeaderData    HeaderData
+		AvatarNumbers []string
+	}{
+		HeaderData:    NewHeaderData(user.Username, r),
+		Username:      user.Username,
+		Bio:           user.Bio,
+		Avatar:        fmt.Sprintf("%03d", user.Avatar),
+		IsAdmin:       isAdmin,
+		CreatedAt:     user.CreatedAt,
+		AvatarNumbers: avatarNumbers,
+	}
+	err = s.serveHTML(r.Context(), w, "edit_profile", data)
 	return err
 }

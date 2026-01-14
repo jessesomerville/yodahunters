@@ -1,0 +1,56 @@
+{{define "main"}}
+<main>
+  <div class="user-view-wrapper">
+    <div class="user-view-box">
+      <h1 class="user-view-username">{{ .Username }}</h1>
+      {{ if .IsAdmin }}
+        <h2 class="user-admin-badge">admin</h2>
+      {{else}}
+        <div class="placeholder-div"></div>
+      {{ end }}
+      <img id="currentAvatar" class="user-view-avatar" src="/static/img/pfps/profile_pic_{{ .Avatar }}.png" data-value="{{ .Avatar }}">
+      <div class="user-view-bio-box">
+        <h3 class="bio-title">About Me</h3>
+        <textarea class="bio-textarea" id="bio" name="bio" required>{{ .Bio }}</textarea>
+      </div>
+      <p class="user-view-regdate"> Registered on: {{ .CreatedAt | fmtDate }}</p>
+      <div class="select-avatar-box">
+        <h3 class="bio-title">Select Avatar</h3>
+        <div class="avatar-container">
+        {{range .AvatarNumbers}}
+            <img class="thumbnail" src="/static/img/pfps/profile_pic_{{ . }}.png" data-value="{{ . }}">
+        {{ end }}
+        </div>
+      </div>
+      <input type="hidden" id="avatar" value="{{ .Avatar }}">
+      <button class="newthread-submit-button" type="button" id="updateUserSubmitButton">Update User</button>
+    </div>
+  </div>
+<script>
+userID = document.getElementById('userID').value;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const newThreadSubmitButton = document.getElementById('updateUserSubmitButton');
+  newThreadSubmitButton.addEventListener('click', function() {
+    handlePostUser();
+  });
+});
+
+document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+    thumbnail.addEventListener('click', function(event) {
+        const mainImage = document.getElementById('currentAvatar');
+        mainImage.src = event.target.getAttribute('src');
+        mainImage.dataset.value = event.target.dataset.value;
+
+    });
+});
+
+function handlePostUser() {
+    const bio = document.getElementById('bio').value;
+    const avatar = Number(document.getElementById('currentAvatar').dataset.value);
+    responseJson = jsonPost("/api/me", {bio: bio, avatar: avatar}, "Update User Failed!", "/users/"+userID)
+}
+</script>
+</main>
+{{end}}
+    
