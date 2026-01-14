@@ -469,10 +469,35 @@ a:hover.paginator-button {
 
 .user-view-bio {
   background-color: #fcf3d0;
+  border-radius: 3px;
+  width: 80%;
+  height: 70%;
+  padding: 5px;
+  font-family: "IBM Plex Serif";
+  font-size: 12pt;
+}
+
+.bio-textarea {
+  background-color: #fcf3d0;
   border: solid 2px #0f419e;
   border-radius: 3px;
   box-shadow: 0 0 2px 0px #28073B;
   width: 80%;
   height: 70%;
   padding: 5px;
+  font-family: "IBM Plex Serif";
+  font-size: 12pt;
+}
+
+.select-avatar-box {
+  grid-column: 1 / -1;
+  border: solid 2px #0f419e;
+  padding: 5px;
+}
+
+.avatar-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  overflow: auto;
+  max-height: 300px;
 }
