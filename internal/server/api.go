@@ -32,8 +32,18 @@ func pageBuilder(q string, r *http.Request) string {
 }
 
 func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) error {
-	q := pageBuilder(`SELECT thread_id, author_id, title, body, created_at FROM threads`, r)
+	q := pageBuilder(`SELECT thread_id, author_id, category_id, title, body, created_at FROM threads`, r)
 	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q)
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(threads)
+}
+
+func (s *Server) getHandleGetThreadsByCategoryID(w http.ResponseWriter, r *http.Request) error {
+	q := pageBuilder(`SELECT thread_id, author_id, category_id, title, body, created_at FROM threads WHERE category_id = $1`, r)
+	categoryID := r.PathValue("id")
+	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q, categoryID)
 	if err != nil {
 		return err
 	}
