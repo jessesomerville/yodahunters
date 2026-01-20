@@ -106,6 +106,83 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	return err
 }
 
+func (s *Server) handleThread(w http.ResponseWriter, r *http.Request) error {
+	// Handle paging
+	var page middleware.Page
+	page = r.Context().Value(middleware.CtxPageKey).(middleware.Page)
+	offset := strconv.Itoa(page.Size * (page.Number - 1))
+	size := strconv.Itoa(page.Size)
+
+	threadID := r.PathValue("id")
+
+	// Find the number of comments in the thread for paging
+	q := `SELECT COUNT(*) FROM comments WHERE thread_id = $1`
+	var commentCount int
+	row, err := s.dbClient.QueryRow(r.Context(), q, threadID)
+	if err != nil {
+		return err
+	}
+	row.Scan(&commentCount)
+	pages := make([]int, int(math.Ceil(float64(commentCount)/float64(page.Size))))
+	for i := range pages {
+		pages[i] = i + 1
+	}
+
+	type threadData struct {
+		Title      string    `db:"title"`
+		Body       string    `db:"body"`
+		AuthorID   int       `db:"author_id"`
+		CategoryID int       `db:"category_id"`
+		CreatedAt  time.Time `db:"created_at"`
+	}
+
+	q = `SELECT title, body, author_id, category_id, created_at FROM threads WHERE thread_id = $1`
+	thread, err := pg.QueryRowToStruct[threadData](r.Context(), s.dbClient, q, threadID)
+	if err != nil {
+		return err
+	}
+
+	type commentView struct {
+		Avatar    int       `db:"avatar"`
+		Username  string    `db:"username"`
+		CommentID int       `db:"comment_id"`
+		Body      string    `db:"body"`
+		CreatedAt time.Time `db:"created_at"`
+	}
+
+	q = `
+	SELECT users.avatar, users.username, comments.comment_id, comments.body, comments.created_at
+	FROM comments
+	JOIN users ON comments.author_id = users.id
+	WHERE comments.thread_id = $1
+	ORDER BY comments.created_at DESC
+	OFFSET $2 LIMIT $3`
+
+	commentViews, err := pg.QueryRowsToStruct[commentView](r.Context(), s.dbClient, q, threadID, offset, size)
+	if err != nil {
+		return err
+	}
+
+	data := struct {
+		ThreadData  threadData
+		CommentData []commentView
+		HeaderData  HeaderData
+		PageData    PageData
+	}{
+		ThreadData:  thread,
+		CommentData: commentViews,
+		HeaderData:  NewHeaderData(thread.Title, r),
+		PageData: PageData{
+			PageNumber: page.Number,
+			PageSize:   page.Size,
+			Pages:      pages,
+		},
+	}
+
+	err = s.serveHTML(r.Context(), w, "thread", data)
+	return err
+}
+
 func (s *Server) handleNewThread(w http.ResponseWriter, r *http.Request) error {
 	// I think it's simpler to just make entire Category structs as opposed to
 	// defining a custom struct with just id and title to hold the data we need.
