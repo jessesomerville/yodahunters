@@ -83,6 +83,7 @@ func Run(ctx context.Context, cfg Config) error {
 	mux.Handle("/new_thread", middleware.Chain(s.handleNewThread, s.jwtSecret))
 	mux.Handle("GET /users/{id}", middleware.Chain(s.handleUsers, s.jwtSecret))
 	mux.Handle("GET /users/edit", middleware.Chain(s.handleUsersEdit, s.jwtSecret))
+	mux.Handle("GET /threads/{id}", middleware.Chain(s.handleThread, s.jwtSecret))
 
 	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
