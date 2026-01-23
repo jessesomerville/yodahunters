@@ -60,26 +60,34 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	// For each thread, we need: CategoryID, Title, Author Name, Number of Replies, TODO[Rating], Latest Comment
 	type threadView struct {
 		CategoryID int    `db:"category_id"`
+		ThreadID   int    `db:"thread_id"`
 		Title      string `db:"title"`
 		AuthorName string `db:"username"`
+		AuthorID   int    `db:"author_id"`
 		ReplyCount int    `db:"reply_count"`
 		// Rating int
-		LatestComment string    `db:"latest_comment"`
-		LatestTS      time.Time `db:"latest_ts"`
+		LatestComment   string    `db:"latest_comment"`
+		LatestCommentID int       `db:"latest_comment_id"`
+		LatestTS        time.Time `db:"latest_ts"`
 	}
 	// Create a SQL query that gives us the right rows from each table
 	q = `
-	SELECT 
-		threads.category_id,
-		threads.title,
-		users.username,
-		(SELECT COUNT(*) FROM comments WHERE comments.thread_id = threads.thread_id) AS reply_count,
-		COALESCE((SELECT comments.body FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 'No comments yet!') AS latest_comment,
-		COALESCE((SELECT comments.created_at FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), threads.created_at) AS latest_ts
-	FROM threads
-	JOIN users ON threads.author_id = users.id
-	LEFT JOIN comments ON threads.thread_id = comments.thread_id
-	GROUP BY threads.thread_id, comments.created_at, users.username
+	SELECT * FROM (
+		SELECT DISTINCT ON (threads.thread_id)
+			threads.category_id,
+			threads.thread_id,
+			threads.title,
+			threads.author_id,
+			users.username,
+			(SELECT COUNT(*) FROM comments WHERE comments.thread_id = threads.thread_id) AS reply_count,
+			COALESCE((SELECT comments.body FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 'No comments yet!') AS latest_comment,
+			COALESCE((SELECT comments.comment_id FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 0) AS latest_comment_id,
+			COALESCE((SELECT comments.created_at FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), threads.created_at) AS latest_ts
+		FROM threads
+		JOIN users ON threads.author_id = users.id
+		LEFT JOIN comments ON threads.thread_id = comments.thread_id
+		GROUP BY threads.thread_id, comments.created_at, users.username
+		ORDER BY threads.thread_id DESC)
 	ORDER BY latest_ts DESC
 	OFFSET $1 LIMIT $2`
 
@@ -129,49 +137,83 @@ func (s *Server) handleThread(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	type threadData struct {
-		Title      string    `db:"title"`
-		Body       string    `db:"body"`
-		AuthorID   int       `db:"author_id"`
-		CategoryID int       `db:"category_id"`
-		CreatedAt  time.Time `db:"created_at"`
+		Title         string    `db:"title"`
+		ThreadID      int       `db:"thread_id"`
+		Body          string    `db:"body"`
+		AuthorID      int       `db:"author_id"`
+		Avatar        int       `db:"avatar"`
+		AvatarStr     string    `db:"-"`
+		Username      string    `db:"username"`
+		CategoryID    int       `db:"category_id"`
+		CategoryTitle string    `db:"category_title"`
+		CreatedAt     time.Time `db:"created_at"`
 	}
 
-	q = `SELECT title, body, author_id, category_id, created_at FROM threads WHERE thread_id = $1`
+	q = `
+	SELECT 
+		threads.title, threads.thread_id, threads.body, threads.author_id, users.avatar, users.username, threads.category_id, categories.title AS category_title, threads.created_at 
+	FROM threads 
+	JOIN users ON threads.author_id = users.id
+	JOIN categories ON threads.category_id = categories.category_id
+	WHERE thread_id = $1`
 	thread, err := pg.QueryRowToStruct[threadData](r.Context(), s.dbClient, q, threadID)
 	if err != nil {
 		return err
 	}
+	thread.AvatarStr = fmt.Sprintf("%03d", thread.Avatar)
 
 	type commentView struct {
-		Avatar    int       `db:"avatar"`
-		Username  string    `db:"username"`
-		CommentID int       `db:"comment_id"`
-		Body      string    `db:"body"`
-		CreatedAt time.Time `db:"created_at"`
+		AuthorID            int       `db:"author_id"`
+		Avatar              int       `db:"avatar"`
+		AvatarStr           string    `db:"-"`
+		Username            string    `db:"username"`
+		CommentID           int       `db:"comment_id"`
+		ReplyID             int       `db:"reply_id"`
+		ReplyPage           int       `db:"reply_page"`
+		ReplyBody           string    `db:"reply_body"`
+		ReplyAuthorUsername string    `db:"reply_author_username"`
+		ReplyAuthorID       int       `db:"reply_author_id"`
+		Body                string    `db:"body"`
+		CreatedAt           time.Time `db:"created_at"`
 	}
 
 	q = `
-	SELECT users.avatar, users.username, comments.comment_id, comments.body, comments.created_at
-	FROM comments
-	JOIN users ON comments.author_id = users.id
-	WHERE comments.thread_id = $1
-	ORDER BY comments.created_at DESC
+	SELECT
+		c1.author_id, 
+		users.avatar, 
+		users.username, 
+		c1.comment_id,
+		c1.reply_id,
+		c1.body,
+		COALESCE((SELECT ind FROM (SELECT c1.comment_id, ROW_NUMBER() OVER (ORDER BY c1.created_at ASC) AS ind) WHERE c1.reply_id = c2.comment_id) / $3 + 1, -1) AS reply_page,
+		COALESCE((SELECT body FROM comments WHERE comments.comment_id = c1.reply_id ), '') AS reply_body,
+		COALESCE((SELECT username FROM users WHERE id = c2.author_id ), '') AS reply_author_username,
+		COALESCE((SELECT id FROM users WHERE id = c2.author_id ), -1) AS reply_author_id,
+		c1.created_at
+	FROM comments AS c1
+	JOIN users ON c1.author_id = users.id
+	LEFT JOIN comments AS c2 ON c1.reply_id = c2.comment_id
+	WHERE c1.thread_id = $1
+	ORDER BY c1.created_at ASC
 	OFFSET $2 LIMIT $3`
 
 	commentViews, err := pg.QueryRowsToStruct[commentView](r.Context(), s.dbClient, q, threadID, offset, size)
 	if err != nil {
 		return err
 	}
+	for i := range commentViews {
+		commentViews[i].AvatarStr = fmt.Sprintf("%03d", commentViews[i].Avatar)
+	}
 
 	data := struct {
-		ThreadData  threadData
-		CommentData []commentView
-		HeaderData  HeaderData
-		PageData    PageData
+		ThreadData   threadData
+		CommentViews []commentView
+		HeaderData   HeaderData
+		PageData     PageData
 	}{
-		ThreadData:  thread,
-		CommentData: commentViews,
-		HeaderData:  NewHeaderData(thread.Title, r),
+		ThreadData:   thread,
+		CommentViews: commentViews,
+		HeaderData:   NewHeaderData(thread.Title, r),
 		PageData: PageData{
 			PageNumber: page.Number,
 			PageSize:   page.Size,

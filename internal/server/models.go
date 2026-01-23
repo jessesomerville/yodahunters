@@ -48,6 +48,7 @@ type Comment struct {
 	ThreadID  int       `json:"thread_id,omitempty" db:"thread_id"`
 	AuthorID  int       `json:"author_id,omitempty" db:"author_id"`
 	Body      string    `json:"body" db:"body"`
+	ReplyID   int       `json:"reply_id,omitempty" db:"reply_id"`
 	CreatedAt time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 

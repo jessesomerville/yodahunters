@@ -8,16 +8,20 @@ function jsonPost(path, data, error, redir = null) {
         },
         body: JSON.stringify(data)
     }
-    fetch(path, options)
+    return fetch(path, options)
         .then(response => {
             if (!response.ok) {
                 alert(error)
                 throw new Error(`HTTP error! status: ${response.status}`);
             } else {
-                if (redir != null)
+                if (redir != null) {
                     window.location.href = redir
+                }
                 return response.json();
             }
+        })
+        .then(data => {
+            return data;
         })
         .catch(error => {
             console.error('Error:', error); // Handle any errors during the fetch operation

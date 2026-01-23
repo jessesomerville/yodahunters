@@ -5,9 +5,11 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 )
 
@@ -18,14 +20,16 @@ type Renderer struct {
 
 // New returns a Renderer populated with the templates in the given filesystem.
 func New(fs template.TrustedFS) (*Renderer, error) {
-	pages := []string{"home", "login", "new_thread", "users", "edit_profile"}
+	pages := []string{"home", "login", "new_thread", "users", "edit_profile", "thread"}
 
 	r := new(Renderer)
 	for _, page := range pages {
 		t, err := template.New("base.tmpl").Funcs(template.FuncMap{
 			// Registering a template function to convert timestamps to formatted strings
-			"fmtTime": fmtTime,
-			"fmtDate": fmtDate,
+			"fmtTime":                   fmtTime,
+			"fmtDate":                   fmtDate,
+			"generateCommentID":         generateCommentID,
+			"generateLatestCommentLink": generateLatestCommentLink,
 		}).ParseFS(fs, "*.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("ParseFS: %v", err)
@@ -69,4 +73,16 @@ func fmtDate(t time.Time) string {
 		panic(err)
 	}
 	return t.In(tz).Format("Jan 2, 2006")
+}
+
+func generateCommentID(i int) safehtml.Identifier {
+	return safehtml.IdentifierFromConstantPrefix("comment", strconv.Itoa(i))
+}
+
+func generateLatestCommentLink(threadID, replyCount, commentID int) string {
+	page := replyCount/20 + 1
+	if commentID == 0 {
+		return fmt.Sprintf("/threads/%d", threadID)
+	}
+	return fmt.Sprintf("/threads/%d?page_number=%d#comment-%d", threadID, page, commentID)
 }
