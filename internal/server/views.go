@@ -26,16 +26,25 @@ type PageData struct {
 // HeaderData is a stuct for holding all the bits of data
 // used by all our templates.
 type HeaderData struct {
-	UserID    int
-	HTMLTitle string
+	UserID       int
+	HTMLTitle    string
+	CategoryData []Category
 }
 
-// NewHeaderData is a constructor for the HeaderData type.
-func NewHeaderData(title string, r *http.Request) HeaderData {
-	return HeaderData{
-		HTMLTitle: title,
-		UserID:    r.Context().Value(middleware.CtxUserKey).(int),
+// newHeaderData is a constructor for the HeaderData type.
+func (s *Server) newHeaderData(title string, r *http.Request) (HeaderData, error) {
+	// We'll grab the categories from the DB
+	q := `SELECT category_id, title, description FROM categories`
+	categories, err := pg.QueryRowsToStruct[Category](r.Context(), s.dbClient, q)
+	if err != nil {
+		return HeaderData{}, err
 	}
+
+	return HeaderData{
+		HTMLTitle:    title,
+		UserID:       r.Context().Value(middleware.CtxUserKey).(int),
+		CategoryData: categories,
+	}, nil
 }
 
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
@@ -96,13 +105,17 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	headerData, err := s.newHeaderData("home", r)
+	if err != nil {
+		return err
+	}
 	data := struct {
 		ThreadViews []threadView
 		HeaderData  HeaderData
 		PageData    PageData
 	}{
 		ThreadViews: threadViews,
-		HeaderData:  NewHeaderData("home", r),
+		HeaderData:  headerData,
 		PageData: PageData{
 			PageNumber: page.Number,
 			PageSize:   page.Size,
@@ -205,6 +218,11 @@ func (s *Server) handleThread(w http.ResponseWriter, r *http.Request) error {
 		commentViews[i].AvatarStr = fmt.Sprintf("%03d", commentViews[i].Avatar)
 	}
 
+	headerData, err := s.newHeaderData(thread.Title, r)
+	if err != nil {
+		return err
+	}
+
 	data := struct {
 		ThreadData   threadData
 		CommentViews []commentView
@@ -213,7 +231,7 @@ func (s *Server) handleThread(w http.ResponseWriter, r *http.Request) error {
 	}{
 		ThreadData:   thread,
 		CommentViews: commentViews,
-		HeaderData:   NewHeaderData(thread.Title, r),
+		HeaderData:   headerData,
 		PageData: PageData{
 			PageNumber: page.Number,
 			PageSize:   page.Size,
@@ -234,11 +252,16 @@ func (s *Server) handleNewThread(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	headerData, err := s.newHeaderData("new thread", r)
+	if err != nil {
+		return err
+	}
+
 	data := struct {
 		CategoryData []Category
 		HeaderData   HeaderData
 	}{
-		HeaderData:   NewHeaderData("new thread", r),
+		HeaderData:   headerData,
 		CategoryData: categoryData,
 	}
 
@@ -259,6 +282,11 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("user with id %q not found", r.PathValue("id"))
 	}
 
+	headerData, err := s.newHeaderData(user.Username, r)
+	if err != nil {
+		return err
+	}
+
 	// Passing the avatar id as a string with two leading zeros for use in the template.
 	// This will likely need to be changed when we update to better profile pics.
 	data := struct {
@@ -270,7 +298,7 @@ func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) error {
 		HeaderData     HeaderData
 		ShowEditButton bool
 	}{
-		HeaderData:     NewHeaderData(user.Username, r),
+		HeaderData:     headerData,
 		Username:       user.Username,
 		Bio:            user.Bio,
 		Avatar:         fmt.Sprintf("%03d", user.Avatar),
@@ -306,6 +334,12 @@ func (s *Server) handleUsersEdit(w http.ResponseWriter, r *http.Request) error {
 	for i := range len(entries) {
 		avatarNumbers[i] = fmt.Sprintf("%03d", i)
 	}
+
+	headerData, err := s.newHeaderData(user.Username, r)
+	if err != nil {
+		return err
+	}
+
 	data := struct {
 		Username      string
 		Bio           string
@@ -315,7 +349,7 @@ func (s *Server) handleUsersEdit(w http.ResponseWriter, r *http.Request) error {
 		HeaderData    HeaderData
 		AvatarNumbers []string
 	}{
-		HeaderData:    NewHeaderData(user.Username, r),
+		HeaderData:    headerData,
 		Username:      user.Username,
 		Bio:           user.Bio,
 		Avatar:        fmt.Sprintf("%03d", user.Avatar),
