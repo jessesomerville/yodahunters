@@ -1,16 +1,16 @@
 {{ define "paginator" }}
 <div class="paginator-wrapper">
-    <a class="paginator-button" href="?page_number=1"><<</a>
+    <a class="paginator-button" href="?page_number=1&page_size={{ .PageData.PageSize }}"><<</a>
     <!-- The template thing below is a weird trick to decrement within templates I found on stack overflow --> 
-    <a class="paginator-button" href="?page_number={{ len (slice (printf "%*s" .PageData.PageNumber "") 1) }}"><</a>
+    <a class="paginator-button" href="?page_number={{ len (slice (printf "%*s" .PageData.PageNumber "") 1) }}&page_size={{ .PageData.PageSize }}"><</a>
     <select class="paginator-select" onchange="window.location.href=window.location.pathname+'?page_number='+this.value">
     <optgroup>
     {{ range .PageData.Pages}}
-    <option value="{{ . }}" {{if eq $.PageData.PageNumber .}}selected{{end}}>{{ . }}</option>
+    <option value="{{ . }}&page_size={{ $.PageData.PageSize }}" {{if eq $.PageData.PageNumber .}}selected{{end}}>{{ . }}</option>
     {{ end }}
     </optgroup>
     </select>
-    <a class="paginator-button" href="?page_number={{ len (printf "a%*s" .PageData.PageNumber "") }}">></a>
-    <a class="paginator-button" href="?page_number={{ len .PageData.Pages }}">>></a>
+    <a class="paginator-button" href="?page_number={{ len (printf "a%*s" .PageData.PageNumber "") }}&page_size={{ .PageData.PageSize }}">></a>
+    <a class="paginator-button" href="?page_number={{ len .PageData.Pages }}&page_size={{ .PageData.PageSize }}">>></a>
 </div>
 {{ end }}

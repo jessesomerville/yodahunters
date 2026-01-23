@@ -441,6 +441,8 @@ a:hover.paginator-button {
   color: #f8d671;;
   text-shadow: 1px 1px 0 #0f419e;
   text-align: center;
+  overflow-wrap: anywhere;
+  max-width: 300px;
 }
 
 .user-admin-badge {
@@ -500,4 +502,70 @@ a:hover.paginator-button {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   overflow: auto;
   max-height: 300px;
+}
+
+.threadbox-thread-cat-title {
+  font-family: "Staatliches";
+  font-size: 14pt;
+}
+
+.threadbox-comment-author-cell {
+  vertical-align: top;
+  display: inline-block;
+  text-align: center;
+  width: 96%;
+  border: none;
+  box-shadow: none;
+}
+
+.threadbox-comment-body-cell {
+  width: 100%;
+  position: relative;
+}
+
+.threadbox-comment-body {
+  padding: 10px;
+  padding-bottom: 30px;
+}
+
+.thread-reply-button {
+  position:absolute;
+  bottom: 8px;
+  left: 150px;
+  background: #f8d671;
+  font-family: "IBM Plex Serif";
+  border-radius: 5%/100%;
+}
+
+.threadbox-comment-ts {
+  position: absolute;
+  left: 5px;
+  bottom: 0;
+  font-size: 10px;
+}
+
+.comment-box {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-bottom: 20px;
+}
+
+.quote-block {
+  font-family: "IBM Plex Serif";
+  margin: 10px;
+  font-size: 12pt;
+  background-color: #fcf3d0;
+  border: solid 1px #28073B;
+  border-radius: 3px;
+}
+
+.quote-heading {
+  font-size: 9pt;
+  font-style: italic;
+  color: #28073B;
+  margin-left: 5px;
+}
+.quote-body {
+  margin-left: 5px;
 }

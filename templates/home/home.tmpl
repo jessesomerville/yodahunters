@@ -12,7 +12,7 @@
       </p>
       <table class="threadbox-table">
         <tr class="threadbox-table-header">
-          <th class="threadbox-icon-cell">Icon</th>
+          <th class="threadbox-icon-cell">Category</th>
           <th class="threadbox-title-cell">Title</th>
           <th class="threadbox-author-cell">Author</th>
           <th>Replies</th>
@@ -25,10 +25,10 @@
             <img class="caticon" src="/static/img/categories/{{.CategoryID}}.gif">
           </td>
           <td class="threadbox-title-cell">
-            <a href="#">{{.Title}}</a>
+            <a href="/threads/{{.ThreadID}}">{{.Title}}</a>
           </td>
           <td class="threadbox-author-cell">
-            <a href="#">{{.AuthorName}}</a>
+            <a href="/users/{{.AuthorID}}">{{.AuthorName}}</a>
           </td>
           <td class="threadbox-replies-cell">
             {{.ReplyCount}}
@@ -40,12 +40,14 @@
           </td>
           <td class="threadbox-lastpost-cell">
           <p class="threadbox-lastpost-ts">{{.LatestTS | fmtTime }}</p>
-          <a href="#">{{.LatestComment}}</a>
+          <a href="{{ generateLatestCommentLink .ThreadID .ReplyCount .LatestCommentID}}">{{.LatestComment}}</a>
           </td>
         </tr>
         {{ end }}
       </table>
     </div>
-    {{ template "paginator" . }}
+    {{if gt (len .PageData.Pages) 1 }}
+        {{ template "paginator" . }}
+    {{ end }}
   </main>
 {{end}}

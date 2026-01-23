@@ -1,0 +1,94 @@
+{{define "main"}}
+  <main>
+    <div class="threadbox">
+      <p class="threadbox-thread-cat-title">
+        <a href="/categories/{{ .ThreadData.CategoryID }}">{{ .ThreadData.CategoryTitle }}</a> > {{ .ThreadData.Title }}
+      </p>
+      <table class="threadbox-table" id="commentTable" data-page-number="{{$.PageData.PageNumber}}" data-page-size="{{$.PageData.PageSize}}" data-page-count="{{len $.PageData.Pages}}" data-thread-id="{{$.ThreadData.ThreadID}}">
+        {{ if eq .PageData.PageNumber 1 }}
+        <tr class="threadbox-row">
+          <td class="threadbox-comment-author-cell">
+            <img class="user-view-avatar" src="/static/img/pfps/profile_pic_{{ .ThreadData.AvatarStr }}.png">
+            <a href="/users/{{ .ThreadData.AuthorID}}">{{ .ThreadData.Username}}</a>
+          </td>
+          <td class="threadbox-comment-body-cell">
+            <p class="threadbox-comment-body">{{ .ThreadData.Body }}</p>
+            <p class="threadbox-comment-ts">{{ .ThreadData.CreatedAt | fmtTime }}</p>
+          </td>
+        </tr>
+        {{ end}}
+        {{range .CommentViews}}
+        <tr class="threadbox-row" id="{{ generateCommentID .CommentID }}">
+          <td class="threadbox-comment-author-cell">
+            <img class="user-view-avatar" src="/static/img/pfps/profile_pic_{{ .AvatarStr }}.png">
+            <a href="/users/{{.AuthorID}}">{{.Username}}</a>
+          </td>
+          <td class="threadbox-comment-body-cell" id="comment-cell-{{generateCommentID .CommentID}}">
+            {{ if gt .ReplyID 0}}
+            <div class="quote-block">
+	            <p class="quote-heading">in reply to this <a href="?page_number={{.ReplyPage}}&page_size={{$.PageData.PageSize}}#comment-{{.ReplyID}}">comment</a> by <a href="/users/{{.ReplyAuthorID}}">{{.ReplyAuthorUsername}}</a><p>
+	            <p class="quote-body">{{.ReplyBody}}</p>
+	        </div>
+            {{ end }}
+            <p class="threadbox-comment-body" id="commentBody-{{generateCommentID .CommentID}}">{{ .Body }}</p>
+            <p class="threadbox-comment-ts">{{.CreatedAt | fmtTime }}</p>
+            <button class="thread-reply-button" type="button" id="threadReplyButton-{{generateCommentID .CommentID}}" data-comment-id="{{generateCommentID .CommentID}}">Reply</button>
+          </td>
+        </tr>
+        {{ end }}
+      </table>
+    </div>
+    <div class="comment-box"id="commentBox">
+        <textarea class="textarea-input" id="commentInput" name="body" rows="4" required></textarea>
+        <button class="newthread-submit-button" type="button" id="commentSubmitButton">Post Comment</button>
+    </div>
+    {{if gt (len .PageData.Pages) 1 }}
+        {{ template "paginator" . }}
+    {{ end }}
+  </main>
+<script>
+var replyID = 0;
+
+function handlePostComment(threadID, body, replyID, pageCount, pageSize) {
+    jsonPost("/api/comments", {thread_id: threadID, body: body, reply_id: replyID}, "Create Comment Failed!")
+    .then(response => {
+        document.location.href = "/threads/"+threadID+"?page_number="+pageCount+"&page_size="+pageSize+"#comment-"+response.comment_id;
+    })
+}
+
+const postCommentButton = document.getElementById('commentSubmitButton');
+postCommentButton.addEventListener('click', function() {
+    const pageSize = commentTable.dataset.pageSize;
+    const pageCount = commentTable.dataset.pageCount;
+    const threadID = commentTable.dataset.threadId;
+    const body = document.getElementById('commentInput').value;
+    handlePostComment(Number(threadID), body, replyID, pageCount, pageSize);
+});
+
+const replyButtons = document.querySelectorAll('.thread-reply-button');
+replyButtons.forEach(button => {
+  button.addEventListener('click', function(event) {
+    replyButtons.forEach(button => {
+      button.style.display = 'inline-block';
+    });
+
+    event.target.style.display = 'none';
+    commentTable = document.getElementById('commentTable');
+    const commentID = event.target.dataset.commentId;
+    const pageNumber = commentTable.dataset.pageNumber;
+    const pageSize = commentTable.dataset.pageSize;
+    const pageCount = commentTable.dataset.pageCount;
+    const threadID = commentTable.dataset.threadId;
+    replyID = Number(commentID.split('-')[1]);
+
+
+    commentCell = document.getElementById("comment-cell-"+commentID);
+    commentBox = document.getElementById("commentBox");
+
+    commentTextArea = document.getElementById('commentInput');
+
+    commentCell.appendChild(commentBox);
+  });
+});
+</script>
+{{end}}

@@ -239,13 +239,13 @@ func (s *Server) apiHandlePostComments(w http.ResponseWriter, r *http.Request) e
 	if err := json.Unmarshal(reqBody, &c); err != nil {
 		return err
 	}
-
+	// If reply isn't specified it will be set to 0 by default
 	const q = `
-	INSERT INTO comments (thread_id, body, author_id)
-	VALUES ($1, $2, $3)
-	RETURNING comment_id, thread_id, author_id, body, created_at`
+	INSERT INTO comments (thread_id, body, reply_id, author_id)
+	VALUES ($1, $2, $3, $4)
+	RETURNING comment_id, thread_id, author_id, body, reply_id, created_at`
 
-	comment, err := pg.QueryRowToStruct[Comment](r.Context(), s.dbClient, q, c.ThreadID, c.Body, r.Context().Value(middleware.CtxUserKey))
+	comment, err := pg.QueryRowToStruct[Comment](r.Context(), s.dbClient, q, c.ThreadID, c.Body, c.ReplyID, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}

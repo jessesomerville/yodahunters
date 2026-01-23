@@ -88,7 +88,7 @@ func Run(ctx context.Context, cfg Config) error {
 	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
 	apiMux.Handle("GET /threads", middleware.Chain(s.apiHandleGetThreads, s.jwtSecret))
-	apiMux.Handle("GET /threads/category/{id}", middleware.Chain(s.getHandleGetThreadsByCategoryID, s.jwtSecret))
+	apiMux.Handle("GET /category/{id}", middleware.Chain(s.getHandleGetThreadsByCategoryID, s.jwtSecret))
 	apiMux.Handle("GET /threads/{id}", middleware.Chain(s.apiHandleGetThreadByID, s.jwtSecret))
 	apiMux.Handle("GET /threads/{id}/comments", middleware.Chain(s.apiHandleGetCommentsByThreadID, s.jwtSecret))
 	apiMux.Handle("POST /threads", middleware.Chain(s.apiHandlePostThreads, s.jwtSecret))
