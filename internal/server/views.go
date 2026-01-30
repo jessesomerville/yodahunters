@@ -127,6 +127,89 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	return err
 }
 
+func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) error {
+	// Handle paging
+	var page middleware.Page
+	page = r.Context().Value(middleware.CtxPageKey).(middleware.Page)
+	offset := strconv.Itoa(page.Size * (page.Number - 1))
+	size := strconv.Itoa(page.Size)
+
+	catID := r.PathValue("id")
+
+	q := `SELECT COUNT(*) FROM threads WHERE category_id = $1`
+	var threadCount int
+	row, err := s.dbClient.QueryRow(r.Context(), q, catID)
+	if err != nil {
+		return err
+	}
+	row.Scan(&threadCount)
+	pages := make([]int, int(math.Ceil(float64(threadCount)/float64(page.Size))))
+	for i := range pages {
+		pages[i] = i + 1
+	}
+
+	// For each thread, we need: CategoryID, Title, Author Name, Number of Replies, TODO[Rating], Latest Comment
+	type threadView struct {
+		CategoryID int    `db:"category_id"`
+		ThreadID   int    `db:"thread_id"`
+		Title      string `db:"title"`
+		AuthorName string `db:"username"`
+		AuthorID   int    `db:"author_id"`
+		ReplyCount int    `db:"reply_count"`
+		// Rating int
+		LatestComment   string    `db:"latest_comment"`
+		LatestCommentID int       `db:"latest_comment_id"`
+		LatestTS        time.Time `db:"latest_ts"`
+	}
+	// Create a SQL query that gives us the right rows from each table
+	q = `
+	SELECT * FROM (
+		SELECT DISTINCT ON (threads.thread_id)
+			threads.category_id,
+			threads.thread_id,
+			threads.title,
+			threads.author_id,
+			users.username,
+			(SELECT COUNT(*) FROM comments WHERE comments.thread_id = threads.thread_id) AS reply_count,
+			COALESCE((SELECT comments.body FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 'No comments yet!') AS latest_comment,
+			COALESCE((SELECT comments.comment_id FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 0) AS latest_comment_id,
+			COALESCE((SELECT comments.created_at FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), threads.created_at) AS latest_ts
+		FROM threads
+		JOIN users ON threads.author_id = users.id
+		LEFT JOIN comments ON threads.thread_id = comments.thread_id
+		WHERE threads.category_id = $1
+		GROUP BY threads.thread_id, comments.created_at, users.username
+		ORDER BY threads.thread_id DESC)
+	ORDER BY latest_ts DESC
+	OFFSET $2 LIMIT $3`
+
+	threadViews, err := pg.QueryRowsToStruct[threadView](r.Context(), s.dbClient, q, catID, offset, size)
+	if err != nil {
+		return err
+	}
+
+	headerData, err := s.newHeaderData("home", r)
+	if err != nil {
+		return err
+	}
+	data := struct {
+		ThreadViews []threadView
+		HeaderData  HeaderData
+		PageData    PageData
+	}{
+		ThreadViews: threadViews,
+		HeaderData:  headerData,
+		PageData: PageData{
+			PageNumber: page.Number,
+			PageSize:   page.Size,
+			Pages:      pages,
+		},
+	}
+
+	err = s.serveHTML(r.Context(), w, "home", data)
+	return err
+}
+
 func (s *Server) handleThread(w http.ResponseWriter, r *http.Request) error {
 	// Handle paging
 	var page middleware.Page
