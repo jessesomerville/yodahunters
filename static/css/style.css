@@ -609,6 +609,7 @@ a:hover.paginator-button {
   background-color: #fcf3d0;
   border: solid 1px #28073B;
   border-radius: 3px;
+  overflow: scroll;
 }
 
 .quote-heading {
@@ -620,6 +621,6 @@ a:hover.paginator-button {
 
 .quote-body {
   margin-left: 5px;
-  line-clamp: 3;
-  overflow: hidden;
+  max-height: 200px;
+  overflow: scroll;
 }
