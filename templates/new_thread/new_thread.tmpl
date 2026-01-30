@@ -26,11 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const newThreadForm = document.getElementById('newThreadForm');
   const newThreadSubmitButton = document.getElementById('newThreadSubmitButton');
 
-  newThreadForm.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      handlePostThread();
-    }
-  });
   newThreadSubmitButton.addEventListener('click', function() {
     handlePostThread();
   });

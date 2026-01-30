@@ -26,24 +26,24 @@ type PageData struct {
 // HeaderData is a stuct for holding all the bits of data
 // used by all our templates.
 type HeaderData struct {
-	UserID       int
-	HTMLTitle    string
-	CategoryData []Category
+	UserID     int
+	HTMLTitle  string
+	Categories []Category
 }
 
 // newHeaderData is a constructor for the HeaderData type.
 func (s *Server) newHeaderData(title string, r *http.Request) (HeaderData, error) {
 	// We'll grab the categories from the DB
-	q := `SELECT category_id, title, description FROM categories`
+	q := `SELECT category_id, title, description, author_id, created_at FROM categories`
 	categories, err := pg.QueryRowsToStruct[Category](r.Context(), s.dbClient, q)
 	if err != nil {
 		return HeaderData{}, err
 	}
 
 	return HeaderData{
-		HTMLTitle:    title,
-		UserID:       r.Context().Value(middleware.CtxUserKey).(int),
-		CategoryData: categories,
+		HTMLTitle:  title,
+		UserID:     r.Context().Value(middleware.CtxUserKey).(int),
+		Categories: categories,
 	}, nil
 }
 

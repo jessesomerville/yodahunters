@@ -301,7 +301,7 @@ func (s *Server) apiHandlePostCategories(w http.ResponseWriter, r *http.Request)
 	}
 	const q = `
 	INSERT INTO categories (title, description, author_id)
-	VALUES ($1, $2)
+	VALUES ($1, $2, $3)
 	RETURNING category_id, title, description, author_id, created_at`
 
 	category, err := pg.QueryRowToStruct[Category](r.Context(), s.dbClient, q, c.Title, c.Description, r.Context().Value(middleware.CtxUserKey))
