@@ -28,7 +28,7 @@
             <div class="quote-block">
 	            <p class="quote-heading">in reply to this <a href="?page_number={{.ReplyPage}}&page_size={{$.PageData.PageSize}}#comment-{{.ReplyID}}">comment</a> by <a href="/users/{{.ReplyAuthorID}}">{{.ReplyAuthorUsername}}</a><p>
 	            <pre class="quote-body">{{.ReplyBody}}</pre>
-	        </div>
+	          </div>
             {{ end }}
             <pre class="threadbox-comment-body" id="commentBody-{{generateCommentID .CommentID}}">{{ .Body }}</pre>
             <p class="threadbox-comment-ts">{{.CreatedAt | fmtTime }}</p>
