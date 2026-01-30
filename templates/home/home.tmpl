@@ -12,14 +12,21 @@
       </p>
       <table class="threadbox-table">
         <tr class="threadbox-table-header">
-          <th class="threadbox-icon-cell">Category</th>
+          <th class="threadbox-icon-cell" id="caticon">Category&#9662;</th>
           <th class="threadbox-title-cell">Title</th>
           <th class="threadbox-author-cell">Author</th>
           <th>Replies</th>
-          <th class="threadbox-rating-cell">Rating</th>
+          <!---<th class="threadbox-rating-cell">Rating</th> --->
           <th class="threadbox-lastpost-cell">Last Post</th>
-        {{range .ThreadViews}}
         </tr>
+        <tr class="submenu threadbox-row" id="submenu">
+          <td class="submenu-cell" colspan="5">
+            {{ range .HeaderData.Categories }}
+            <a href="/categories/{{.ID}}">{{.Title}}</a>
+            {{ end }}
+          </td>
+        </tr>
+        {{range .ThreadViews}}
         <tr class="threadbox-row">
           <td class="threadbox-icon-cell">
             <img class="caticon" src="/static/img/categories/{{.CategoryID}}.gif">
@@ -33,11 +40,11 @@
           <td class="threadbox-replies-cell">
             {{.ReplyCount}}
           </td>
-          <td class="threadbox-rating-cell">
+         <!--- <td class="threadbox-rating-cell">
             <div class="threadbox-rating-div">
               <img class="rating-star" src="/static/img/star.svg">
             </div>
-          </td>
+          </td> --->
           <td class="threadbox-lastpost-cell">
           <p class="threadbox-lastpost-ts">{{.LatestTS | fmtTime }}</p>
           <a href="{{ generateLatestCommentLink .ThreadID .ReplyCount .LatestCommentID}}">{{.LatestComment}}</a>
@@ -50,4 +57,15 @@
         {{ template "paginator" . }}
     {{ end }}
   </main>
+<script>
+const catHeader = document.getElementById('caticon');
+catHeader.addEventListener('click', function() {
+  submenuRow = document.getElementById("submenu");
+  if (submenuRow.style.display === 'table-row') {
+    submenuRow.style.display = 'none';
+  } else {
+    submenuRow.style.display = 'table-row';
+  }
+});
+</script>
 {{end}}

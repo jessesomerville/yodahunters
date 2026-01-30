@@ -12,7 +12,7 @@
             <a href="/users/{{ .ThreadData.AuthorID}}">{{ .ThreadData.Username}}</a>
           </td>
           <td class="threadbox-comment-body-cell">
-            <p class="threadbox-comment-body">{{ .ThreadData.Body }}</p>
+            <pre class="threadbox-comment-body">{{ .ThreadData.Body }}</pre>
             <p class="threadbox-comment-ts">{{ .ThreadData.CreatedAt | fmtTime }}</p>
           </td>
         </tr>
@@ -27,10 +27,10 @@
             {{ if gt .ReplyID 0}}
             <div class="quote-block">
 	            <p class="quote-heading">in reply to this <a href="?page_number={{.ReplyPage}}&page_size={{$.PageData.PageSize}}#comment-{{.ReplyID}}">comment</a> by <a href="/users/{{.ReplyAuthorID}}">{{.ReplyAuthorUsername}}</a><p>
-	            <p class="quote-body">{{.ReplyBody}}</p>
+	            <pre class="quote-body">{{.ReplyBody}}</pre>
 	        </div>
             {{ end }}
-            <p class="threadbox-comment-body" id="commentBody-{{generateCommentID .CommentID}}">{{ .Body }}</p>
+            <pre class="threadbox-comment-body" id="commentBody-{{generateCommentID .CommentID}}">{{ .Body }}</pre>
             <p class="threadbox-comment-ts">{{.CreatedAt | fmtTime }}</p>
             <button class="thread-reply-button" type="button" id="threadReplyButton-{{generateCommentID .CommentID}}" data-comment-id="{{generateCommentID .CommentID}}">Reply</button>
           </td>
@@ -53,6 +53,7 @@ function handlePostComment(threadID, body, replyID, pageCount, pageSize) {
     jsonPost("/api/comments", {thread_id: threadID, body: body, reply_id: replyID}, "Create Comment Failed!")
     .then(response => {
         document.location.href = "/threads/"+threadID+"?page_number="+pageCount+"&page_size="+pageSize+"#comment-"+response.comment_id;
+        document.location.reload();
     })
 }
 
