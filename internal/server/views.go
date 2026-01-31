@@ -73,6 +73,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 		Title      string `db:"title"`
 		AuthorName string `db:"username"`
 		AuthorID   int    `db:"author_id"`
+		Pinned     bool   `db:"pinned"`
 		ReplyCount int    `db:"reply_count"`
 		// Rating int
 		LatestComment   string    `db:"latest_comment"`
@@ -87,6 +88,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 			threads.thread_id,
 			threads.title,
 			threads.author_id,
+			threads.pinned,
 			users.username,
 			(SELECT COUNT(*) FROM comments WHERE comments.thread_id = threads.thread_id) AS reply_count,
 			COALESCE((SELECT comments.body FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 'No comments yet!') AS latest_comment,
@@ -105,17 +107,43 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	q = `
+	SELECT
+		threads.category_id,
+		threads.thread_id,
+		threads.title,
+		threads.author_id,
+		threads.pinned,
+		users.username,
+		(SELECT COUNT(*) FROM comments WHERE comments.thread_id = threads.thread_id) AS reply_count,
+		COALESCE((SELECT comments.body FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 'No comments yet!') AS latest_comment,
+		COALESCE((SELECT comments.comment_id FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), 0) AS latest_comment_id,
+		COALESCE((SELECT comments.created_at FROM comments WHERE comments.thread_id = threads.thread_id ORDER BY comments.created_at DESC LIMIT 1), threads.created_at) AS latest_ts
+	FROM threads
+	JOIN users ON threads.author_id = users.id
+	LEFT JOIN comments ON threads.thread_id = comments.thread_id
+	WHERE threads.pinned = true
+	GROUP BY threads.thread_id, comments.created_at, users.username
+	ORDER BY threads.thread_id DESC`
+
+	pinnedThreadViews, err := pg.QueryRowsToStruct[threadView](r.Context(), s.dbClient, q)
+	if err != nil {
+		return err
+	}
+
 	headerData, err := s.newHeaderData("home", r)
 	if err != nil {
 		return err
 	}
 	data := struct {
-		ThreadViews []threadView
-		HeaderData  HeaderData
-		PageData    PageData
+		ThreadViews   []threadView
+		PinnedThreads []threadView
+		HeaderData    HeaderData
+		PageData      PageData
 	}{
-		ThreadViews: threadViews,
-		HeaderData:  headerData,
+		ThreadViews:   threadViews,
+		PinnedThreads: pinnedThreadViews,
+		HeaderData:    headerData,
 		PageData: PageData{
 			PageNumber: page.Number,
 			PageSize:   page.Size,

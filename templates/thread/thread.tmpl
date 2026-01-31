@@ -4,6 +4,9 @@
       <p class="threadbox-thread-cat-title">
         <a href="/categories/{{ .ThreadData.CategoryID }}">{{ .ThreadData.CategoryTitle }}</a> > {{ .ThreadData.Title }}
       </p>
+      {{if gt (len .PageData.Pages) 1 }}
+        {{ template "paginator" . }}
+      {{ end }}
       <table class="threadbox-table" id="commentTable" data-page-number="{{$.PageData.PageNumber}}" data-page-size="{{$.PageData.PageSize}}" data-page-count="{{len $.PageData.Pages}}" data-thread-id="{{$.ThreadData.ThreadID}}">
         {{ if eq .PageData.PageNumber 1 }}
         <tr class="threadbox-row">

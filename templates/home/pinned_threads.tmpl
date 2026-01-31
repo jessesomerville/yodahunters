@@ -1,30 +1,18 @@
-{{define "main"}}
-  <main>
-    <!--- one day word up template will be here --->
-    {{if and (gt (len .PinnedThreads) 0) (eq .PageData.PageNumber 1)}}
-        {{ template "pinned_threads" . }}
-    {{ end }}
+{{ define "pinned_threads" }}
     <div class="threadbox">
       <p class="threadbox-title-content">
-        Da Latest Threads ... ....
+        Pinned Threads: The Admins' Delight
       </p>
       <table class="threadbox-table">
         <tr class="threadbox-table-header">
-          <th class="threadbox-icon-cell" id="caticon">Category&#9662;</th>
+          <th class="threadbox-icon-cell">Category</th>
           <th class="threadbox-title-cell">Title</th>
           <th class="threadbox-author-cell">Author</th>
           <th>Replies</th>
           <!---<th class="threadbox-rating-cell">Rating</th> --->
           <th class="threadbox-lastpost-cell">Last Post</th>
         </tr>
-        <tr class="submenu threadbox-row" id="submenu">
-          <td class="submenu-cell" colspan="5">
-            {{ range .HeaderData.Categories }}
-            <a href="/category/{{.ID}}">{{.Title}}</a>
-            {{ end }}
-          </td>
-        </tr>
-        {{range .ThreadViews}}
+        {{range .PinnedThreads}}
         <tr class="threadbox-row">
           <td class="threadbox-icon-cell">
             <img class="caticon" src="/static/img/categories/{{.CategoryID}}.gif">
@@ -51,19 +39,4 @@
         {{ end }}
       </table>
     </div>
-    {{if gt (len .PageData.Pages) 1 }}
-        {{ template "paginator" . }}
-    {{ end }}
-  </main>
-<script>
-const catHeader = document.getElementById('caticon');
-catHeader.addEventListener('click', function() {
-  submenuRow = document.getElementById("submenu");
-  if (submenuRow.style.display === 'table-row') {
-    submenuRow.style.display = 'none';
-  } else {
-    submenuRow.style.display = 'table-row';
-  }
-});
-</script>
-{{end}}
+{{ end }}
