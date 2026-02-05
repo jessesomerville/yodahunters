@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -106,6 +107,12 @@ func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
+	// We're gonna validate the email address
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(data.Email) {
+		return fmt.Errorf("invalid email address")
+	}
+
 	const checkRegQuery = "SELECT EXISTS(SELECT 1 FROM registration_keys WHERE reg_key = $1 AND used = false)"
 	var regKeyExists bool
 	row, err := s.dbClient.QueryRow(r.Context(), checkRegQuery, data.RegistrationKey)
@@ -166,6 +173,7 @@ func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
+	row.Scan()
 
 	return json.NewEncoder(w).Encode(user)
 }

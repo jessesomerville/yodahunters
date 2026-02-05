@@ -47,6 +47,58 @@ func (s *Server) newHeaderData(title string, r *http.Request) (HeaderData, error
 	}, nil
 }
 
+func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
+	err := s.serveHTML(r.Context(), w, "login", nil)
+	return err
+}
+
+// This route is just a box to enter a regkey. It redirects to the route
+// below when you submit.
+func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
+	err := s.serveHTML(r.Context(), w, "register", nil)
+	return err
+}
+
+// This route is where you actually fill everything out to register
+func (s *Server) handleRegisterKey(w http.ResponseWriter, r *http.Request) error {
+	regKey := r.PathValue("regkey")
+
+	const checkRegQuery = "SELECT EXISTS(SELECT 1 FROM registration_keys WHERE reg_key = $1 AND used = false)"
+	var regKeyExists bool
+	row, err := s.dbClient.QueryRow(r.Context(), checkRegQuery, regKey)
+	if err != nil {
+		return err
+	}
+	row.Scan(&regKeyExists)
+	if !regKeyExists {
+		return fmt.Errorf("invalid registration key")
+	}
+
+	// This is a little bit hacky, but it makes managing profile pics
+	// very easy for now.
+	entries, err := os.ReadDir("static/img/pfps")
+	if err != nil {
+		return err
+	}
+	avatarNumbers := make([]string, len(entries))
+	for i := range len(entries) {
+		avatarNumbers[i] = fmt.Sprintf("%03d", i)
+	}
+
+	data := struct {
+		HeaderData    HeaderData
+		AvatarNumbers []string
+		RegKey        string
+	}{
+		HeaderData:    HeaderData{HTMLTitle: "Register"},
+		AvatarNumbers: avatarNumbers,
+		RegKey:        regKey,
+	}
+
+	err = s.serveHTML(r.Context(), w, "register_key", data)
+	return err
+}
+
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	// Handle paging
 	var page middleware.Page
