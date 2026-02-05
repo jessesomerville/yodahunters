@@ -220,13 +220,16 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	// Passing an empty slice to the pinned threads so I can reuse the template
 	data := struct {
-		ThreadViews []threadView
-		HeaderData  HeaderData
-		PageData    PageData
+		ThreadViews   []threadView
+		PinnedThreads []threadView
+		HeaderData    HeaderData
+		PageData      PageData
 	}{
-		ThreadViews: threadViews,
-		HeaderData:  headerData,
+		ThreadViews:   threadViews,
+		HeaderData:    headerData,
+		PinnedThreads: []threadView{},
 		PageData: PageData{
 			PageNumber: page.Number,
 			PageSize:   page.Size,

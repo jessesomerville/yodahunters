@@ -79,8 +79,10 @@ func Run(ctx context.Context, cfg Config) error {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", middleware.Chain(s.handleHome, s.jwtSecret))
-	mux.Handle("/login", middleware.ErrorHandler(s.handleLogin))
-	mux.Handle("/new_thread", middleware.Chain(s.handleNewThread, s.jwtSecret))
+	mux.Handle("GET /login", middleware.ErrorHandler(s.handleLogin))
+	//mux.Handle("GET /register", middleware.ErrorHandler(s.handleRegister))
+	//mux.Handle("GET /register/{reg_key}", middleware.ErrorHandler(s.handleRegisterKey))
+	mux.Handle("GET /new_thread", middleware.Chain(s.handleNewThread, s.jwtSecret))
 	mux.Handle("GET /users/{id}", middleware.Chain(s.handleUsers, s.jwtSecret))
 	mux.Handle("GET /users/edit", middleware.Chain(s.handleUsersEdit, s.jwtSecret))
 	mux.Handle("GET /threads/{id}", middleware.Chain(s.handleThread, s.jwtSecret))
