@@ -20,7 +20,7 @@ type Renderer struct {
 
 // New returns a Renderer populated with the templates in the given filesystem.
 func New(fs template.TrustedFS) (*Renderer, error) {
-	pages := []string{"home", "login", "new_thread", "users", "edit_profile", "thread"}
+	pages := []string{"home", "login", "new_thread", "users", "edit_profile", "thread", "category"}
 
 	r := new(Renderer)
 	for _, page := range pages {

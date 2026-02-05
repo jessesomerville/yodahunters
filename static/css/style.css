@@ -254,6 +254,10 @@ pre {
   width: 120px;
 }
 
+th.threadbox-icon-cell {
+  cursor: pointer;
+}
+
 .threadbox-row > td {
   box-shadow: inset 0px 0px 5px 2px #f8d671;
   border: 1px solid #28073B;

@@ -2,7 +2,7 @@
   <main>
     <div class="threadbox">
       <p class="threadbox-thread-cat-title">
-        <a href="/categories/{{ .ThreadData.CategoryID }}">{{ .ThreadData.CategoryTitle }}</a> > {{ .ThreadData.Title }}
+        <a href="/category/{{ .ThreadData.CategoryID }}">{{ .ThreadData.CategoryTitle }}</a> > {{ .ThreadData.Title }}
       </p>
       {{if gt (len .PageData.Pages) 1 }}
         {{ template "paginator" . }}
