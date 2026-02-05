@@ -93,32 +93,58 @@ func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
-	var u User
-	if err := json.Unmarshal(reqBody, &u); err != nil {
+	type reqData struct {
+		RegistrationKey string `json:"reg_key"`
+		Username        string `json:"username"`
+		Email           string `json:"email"`
+		Password        string `json:"password"`
+		Bio             string `json:"bio"`
+		Avatar          int    `json:"avatar"`
+	}
+	var data reqData
+	if err := json.Unmarshal(reqBody, &data); err != nil {
 		return err
+	}
+
+	const checkRegQuery = "SELECT EXISTS(SELECT 1 FROM registration_keys WHERE reg_key = $1 AND used = false)"
+	var regKeyExists bool
+	row, err := s.dbClient.QueryRow(r.Context(), checkRegQuery, data.RegistrationKey)
+	if err != nil {
+		return err
+	}
+	row.Scan(&regKeyExists)
+	if !regKeyExists {
+		return fmt.Errorf("invalid registration key")
 	}
 
 	const checkUserExists = "SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)"
 	var userExists bool
-	row, err := s.dbClient.QueryRow(r.Context(), checkUserExists, u.Username)
+	row, err = s.dbClient.QueryRow(r.Context(), checkUserExists, data.Username)
 	if err != nil {
 		return err
 	}
 	row.Scan(&userExists)
 	if userExists {
-		return fmt.Errorf("user with username: %s already exists", u.Username)
+		return fmt.Errorf("user with username: %s already exists", data.Username)
 	}
 
 	const checkEmailExists = "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)"
 	var emailExists bool
-	row, err = s.dbClient.QueryRow(r.Context(), checkEmailExists, u.Email)
+	row, err = s.dbClient.QueryRow(r.Context(), checkEmailExists, data.Email)
 	if err != nil {
 		return err
 	}
 	row.Scan(&emailExists)
 	if emailExists {
-		return fmt.Errorf("user with username: %s already exists", u.Username)
+		return fmt.Errorf("user with email: %s already exists", data.Email)
 	}
+
+	var u User
+	u.Username = data.Username
+	u.Email = data.Email
+	u.Password = data.Password
+	u.Bio = data.Bio
+	u.Avatar = data.Avatar
 
 	if err = u.GeneratePasswordHash(); err != nil {
 		return err
@@ -131,8 +157,16 @@ func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
+
 	var user User
 	row.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.Avatar, &user.CreatedAt)
+
+	const updateRegKey = "UPDATE registration_keys SET used = true, used_by = $1 WHERE reg_key = $2"
+	row, err = s.dbClient.QueryRow(r.Context(), updateRegKey, user.ID, data.RegistrationKey)
+	if err != nil {
+		return err
+	}
+
 	return json.NewEncoder(w).Encode(user)
 }
 
