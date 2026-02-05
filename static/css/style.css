@@ -343,7 +343,23 @@ th.threadbox-icon-cell {
   background: #ffedac;
   padding-left: 5%;
   padding-right: 5%;
+  display: grid;
+  place-items: center;
 }
+
+.reg-input {
+  font-family: "IBM Plex Serif";
+  margin-left: 10px;
+  margin-right: 10px;
+  font-size: 12pt;
+  background-color: #fcf3d0;
+  border: solid 2px #0f419e;
+  border-radius: 3px;
+  box-shadow: 0 0 2px 0px #28073B;
+  width: 50px;
+  margin-bottom: 20px;
+}
+
 
 .login-title {
   margin-top: 10px;
@@ -362,13 +378,12 @@ th.threadbox-icon-cell {
 
 .input-label {
   font-family: "Audiowide";
-  margin-left: 10px;
+  margin: 10px;
 }
 
 .input {
   font-family: "IBM Plex Serif";
-  margin-left: 10px;
-  margin-right: 10px;
+  margin: 10px;
   font-size: 12pt;
   background-color: #fcf3d0;
   border: solid 2px #0f419e;
@@ -550,12 +565,26 @@ a:hover.paginator-button {
   padding: 5px;
   font-family: "IBM Plex Serif";
   font-size: 12pt;
+  margin: 10px;
+}
+
+.reg-bio-textarea {
+  background-color: #fcf3d0;
+  border: solid 2px #0f419e;
+  border-radius: 3px;
+  box-shadow: 0 0 2px 0px #28073B;
+  height: 70%;
+  padding: 5px;
+  font-family: "IBM Plex Serif";
+  font-size: 12pt;
+  margin: 10px;
 }
 
 .select-avatar-box {
   grid-column: 1 / -1;
   border: solid 2px #0f419e;
   padding: 5px;
+  margin: 10px;
 }
 
 .avatar-container {

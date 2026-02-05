@@ -1,0 +1,101 @@
+{{define "main"}}
+<main>
+  <div class="user-view-wrapper">
+    <div class="user-view-box">
+      <h1 class="user-view-title">Register User</h1><div></div>
+      <label class="input-label" for="Email">Email:</label>
+      <input class="input" type="text" id="email" name="email">
+      <label class="input-label" for="username">Username:</label>
+      <input class="input" type="text" id="username" name="username">
+      <label class="input-label" for="password">Password:</label>
+      <input class="input" type="password" id="password" name="password">
+      <label class="input-label" for="confirm-password"> Confirm Password:</label>
+      <input class="input" type="password" id="confirm-password" name="confirm-password">
+      <label class="input-label" for="bio">Bio:</label>
+      <textarea class="reg-bio-textarea" id="bio" name="bio"></textarea>
+      <div>
+        <h3 class="bio-title">Select Avatar</h3><br>
+        <img id="currentAvatar" class="user-view-avatar" src="/static/img/pfps/profile_pic_099.png" data-value="099">
+      </div>
+      <div class="reg-avatar-selector">
+        <div class="select-avatar-box">
+          <div class="avatar-container">
+          {{range .AvatarNumbers}}
+              <img class="thumbnail" src="/static/img/pfps/profile_pic_{{ . }}.png" data-value="{{ . }}">
+          {{ end }}
+          </div>
+        </div>
+        <input type="hidden" id="avatar" value="099">
+        <input type="hidden" id="regkey" value="{{.RegKey}}">
+      </div>
+      <button class="newthread-submit-button" type="button" id="registerSubmitButton">Register</button>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const newThreadSubmitButton = document.getElementById('registerSubmitButton');
+  newThreadSubmitButton.addEventListener('click', function() {
+    handleRegisterUser();
+  });
+});
+
+document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+    thumbnail.addEventListener('click', function(event) {
+        const mainImage = document.getElementById('currentAvatar');
+        mainImage.src = event.target.getAttribute('src');
+        mainImage.dataset.value = event.target.dataset.value;
+
+    });
+});
+
+function handleRegisterUser() {
+    const regKey = document.getElementById('regkey').value;
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    const bio = document.getElementById('bio').value;
+    const avatar = Number(document.getElementById('currentAvatar').dataset.value);
+    
+    if (username.length > 100) {
+      alert("Username must be less than 100 characters")
+      return;
+    }
+
+    if (password.length < 10) {
+      alert("Password must be at least 10 characters")
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match")
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (emailRegex.test(email) === false) {
+      alert("Invalid email")
+      return;
+    }
+
+    if (avatar < 0 || avatar > 999) {
+      alert("Invalid avatar")
+      return;
+    }
+
+    responseJson = jsonPost("/api/register", 
+    {
+      reg_key: regKey, 
+      username: username, 
+      email: email, 
+      password: password, 
+      bio: bio, 
+      avatar: avatar
+    }, 
+    "Register user failed!", "/login")
+}
+</script>
+</main>
+{{end}}
+    

@@ -1,0 +1,32 @@
+{{ define "main" }}
+<main>
+  <div class="login-wrapper">
+    <div class="login-box">
+      <h1 class="login-title">Enter your registration key</h1>
+      <form class="login-form" id="loginForm">
+        <input class="reg-input" type="text" id="reg-input-1" name="registration-key" maxLength="4" required>-<input class="reg-input" type="text" id="reg-input-2" name="registration-key" maxLength="4" required>-<input class="reg-input" type="text" id="reg-input-3" name="registration-key" maxLength="4" required>
+        <button class="submit-button" type="button" id="loginButton">Submit</button>
+      </form>
+    </div>
+  </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const loginForm = document.getElementById('loginForm');
+  const loginButton = document.getElementById('loginButton');
+
+  loginForm.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      handleRegSubmit();
+    }
+  });
+  loginButton.addEventListener('click', function() {
+    handleRegSubmit();
+  });
+});
+
+function handleRegSubmit() {
+    const regKey = document.getElementById('reg-input-1').value + "-" + document.getElementById('reg-input-2').value + "-" + document.getElementById('reg-input-3').value;
+    window.location.href = "/register/"+regKey;
+}
+</script>
+{{ end }}

@@ -80,8 +80,8 @@ func Run(ctx context.Context, cfg Config) error {
 	mux := http.NewServeMux()
 	mux.Handle("/", middleware.Chain(s.handleHome, s.jwtSecret))
 	mux.Handle("GET /login", middleware.ErrorHandler(s.handleLogin))
-	//mux.Handle("GET /register", middleware.ErrorHandler(s.handleRegister))
-	//mux.Handle("GET /register/{reg_key}", middleware.ErrorHandler(s.handleRegisterKey))
+	mux.Handle("GET /register", middleware.ErrorHandler(s.handleRegister))
+	mux.Handle("GET /register/{regkey}", middleware.ErrorHandler(s.handleRegisterKey))
 	mux.Handle("GET /new_thread", middleware.Chain(s.handleNewThread, s.jwtSecret))
 	mux.Handle("GET /users/{id}", middleware.Chain(s.handleUsers, s.jwtSecret))
 	mux.Handle("GET /users/edit", middleware.Chain(s.handleUsersEdit, s.jwtSecret))
@@ -135,9 +135,4 @@ func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl stri
 		log.Errorf(ctx, "serveHTML(w, %q, data): failed to write to http.ResponseWriter: %v", tmpl, err)
 	}
 	return nil
-}
-
-func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
-	err := s.serveHTML(r.Context(), w, "login", nil)
-	return err
 }
