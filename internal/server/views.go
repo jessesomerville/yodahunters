@@ -162,7 +162,10 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) error {
 	offset := strconv.Itoa(page.Size * (page.Number - 1))
 	size := strconv.Itoa(page.Size)
 
-	catID := r.PathValue("id")
+	catID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		return err
+	}
 
 	q := `SELECT COUNT(*) FROM threads WHERE category_id = $1`
 	var threadCount int
@@ -220,16 +223,15 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	// Passing an empty slice to the pinned threads so I can reuse the template
 	data := struct {
-		ThreadViews   []threadView
-		PinnedThreads []threadView
-		HeaderData    HeaderData
-		PageData      PageData
+		ThreadViews []threadView
+		HeaderData  HeaderData
+		PageData    PageData
+		CategoryID  int
 	}{
-		ThreadViews:   threadViews,
-		HeaderData:    headerData,
-		PinnedThreads: []threadView{},
+		ThreadViews: threadViews,
+		HeaderData:  headerData,
+		CategoryID:  catID,
 		PageData: PageData{
 			PageNumber: page.Number,
 			PageSize:   page.Size,
@@ -237,7 +239,7 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) error {
 		},
 	}
 
-	err = s.serveHTML(r.Context(), w, "home", data)
+	err = s.serveHTML(r.Context(), w, "category", data)
 	return err
 }
 
