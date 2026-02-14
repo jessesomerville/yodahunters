@@ -160,7 +160,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	q = `
-	SELECT
+	SELECT DISTINCT ON (threads.thread_id)
 		threads.category_id,
 		threads.thread_id,
 		threads.title,
