@@ -2,6 +2,6 @@
 
 BEGIN;
 
-ALTER TABLE threads ADD COLUMN author_id INT REFERENCES users(id)
+ALTER TABLE threads ADD COLUMN author_id INT REFERENCES users(id);
 
 END;

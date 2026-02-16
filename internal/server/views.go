@@ -59,7 +59,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	return err
 }
 
-// This route is where you actually fill everything out to register
+// This route is where you actually fill everything out to register.
 func (s *Server) handleRegisterKey(w http.ResponseWriter, r *http.Request) error {
 	regKey := r.PathValue("regkey")
 

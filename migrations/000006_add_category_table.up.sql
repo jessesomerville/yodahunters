@@ -10,8 +10,11 @@ CREATE TABLE categories (
   	created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO categories (title, description, author_id) 
-    VALUES ('General', 'Just chatting...', 1);
+-- The following statement fails if there isn't an existing user with the ID 1 in the users table
+-- (which is always the case unless one was created manually between migration versions).
+--
+-- INSERT INTO categories (title, description, author_id) 
+--     VALUES ('General', 'Just chatting...', 1);
 
 ALTER TABLE threads ADD COLUMN category_id INT REFERENCES categories(category_id) DEFAULT 1;
 
