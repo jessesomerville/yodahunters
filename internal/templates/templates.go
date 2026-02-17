@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ func New(fs template.TrustedFS) (*Renderer, error) {
 			"fmtDate":                   fmtDate,
 			"generateCommentID":         generateCommentID,
 			"generateLatestCommentLink": generateLatestCommentLink,
+			"linkifyURLs":               linkifyURLs,
 		}).ParseFS(fs, "*.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("ParseFS: %v", err)
@@ -85,4 +87,45 @@ func generateLatestCommentLink(threadID, replyCount, commentID int) string {
 		return fmt.Sprintf("/threads/%d", threadID)
 	}
 	return fmt.Sprintf("/threads/%d?page_number=%d#comment-%d", threadID, page, commentID)
+}
+
+var (
+	urlRegex       = regexp.MustCompile(`\bhttps?://[a-zA-Z0-9-\.]+(?::\d+)?(?:/[^\s]*)?\b`)
+	formatLinkTmpl = template.Must(template.New("link").Parse(`<a href="{{.URL}}" rel="nofollow noreferrer">{{.URL}}</a>`))
+)
+
+type linkData struct {
+	URL safehtml.URL
+}
+
+// linkifyURLs finds all URLs in the input and wraps them in <a> tags
+// to make them hyperlinks when displayed in the browser.
+func linkifyURLs(contents string) safehtml.HTML {
+	matches := urlRegex.FindAllStringIndex(contents, -1)
+	if len(matches) == 0 {
+		return safehtml.HTMLEscaped(contents)
+	}
+	var chunks []safehtml.HTML
+	prevEnd := 0
+	for _, idx := range matches {
+		start, end := idx[0], idx[1]
+		if prevEnd < start {
+			chunks = append(chunks, safehtml.HTMLEscaped(contents[prevEnd:start]))
+		}
+		d := linkData{
+			URL: safehtml.URLSanitized(contents[start:end]),
+		}
+		wrapped, err := formatLinkTmpl.ExecuteTemplateToHTML("link", d)
+		if err != nil {
+			// Fallback, just concat the escaped URL to the contents.
+			chunks = append(chunks, safehtml.HTMLEscaped(contents[start:end]))
+		} else {
+			chunks = append(chunks, wrapped)
+		}
+		prevEnd = end
+	}
+	if prevEnd < len(contents) {
+		chunks = append(chunks, safehtml.HTMLEscaped(contents[prevEnd:]))
+	}
+	return safehtml.HTMLConcat(chunks...)
 }
