@@ -15,7 +15,7 @@
             <a href="/users/{{ .ThreadData.AuthorID}}">{{ .ThreadData.Username}}</a>
           </td>
           <td class="threadbox-comment-body-cell">
-            <pre class="threadbox-comment-body">{{ .ThreadData.Body }}</pre>
+            <pre class="threadbox-comment-body">{{ .ThreadData.Body | linkifyURLs }}</pre>
             <p class="threadbox-comment-ts">{{ .ThreadData.CreatedAt | fmtTime }}</p>
           </td>
         </tr>
@@ -33,7 +33,7 @@
 	            <pre class="quote-body">{{.ReplyBody}}</pre>
 	          </div>
             {{ end }}
-            <pre class="threadbox-comment-body" id="commentBody-{{generateCommentID .CommentID}}">{{ .Body }}</pre>
+            <pre class="threadbox-comment-body" id="commentBody-{{generateCommentID .CommentID}}">{{ .Body | linkifyURLs }}</pre>
             <p class="threadbox-comment-ts">{{.CreatedAt | fmtTime }}</p>
             <button class="thread-reply-button" type="button" id="threadReplyButton-{{generateCommentID .CommentID}}" data-comment-id="{{generateCommentID .CommentID}}">Reply</button>
           </td>
