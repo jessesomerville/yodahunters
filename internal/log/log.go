@@ -4,7 +4,11 @@ package log
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 // Logger is a structured log handler.
@@ -91,4 +95,18 @@ func FromContext(ctx context.Context) *slog.Logger {
 // SetContext returns a derived context that contains the given logger.
 func SetContext(ctx context.Context, l *slog.Logger) context.Context {
 	return context.WithValue(ctx, ctxKey{}, l)
+}
+
+// LogToFile adds a file as a log sink to the default logger.
+// The path of the log file is returned if successful.
+func LogToFile() (string, error) {
+	logFile := filepath.Join(os.TempDir(), fmt.Sprintf("yodahunters_%s.log", time.Now().UTC().Format("20060102_15_04_05")))
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to create output log file: %v", err)
+	}
+	w := io.MultiWriter(f, os.Stdout)
+	handler := slog.NewTextHandler(w, nil)
+	slog.SetDefault(slog.New(handler))
+	return logFile, nil
 }
