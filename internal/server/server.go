@@ -43,6 +43,12 @@ type Server struct {
 
 // Run starts the server and returns an error upon exit.
 func Run(ctx context.Context, cfg Config) error {
+	logPath, err := log.LogToFile()
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "Started writing logs to %s", logPath)
+
 	renderer, err := templates.New(cfg.TemplateFS)
 	if err != nil {
 		return err
@@ -51,12 +57,10 @@ func Run(ctx context.Context, cfg Config) error {
 	if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
 		return err
 	}
-
 	dbClient, err := pg.NewClient(ctx, dbname)
 	if err != nil {
 		return err
 	}
-
 	if cfg.DevMode {
 		log.Warnf(ctx, "Dev mode is enabled, templates will be reparsed each time a page is loaded.")
 	}
@@ -115,7 +119,7 @@ func Run(ctx context.Context, cfg Config) error {
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	log.Infof(ctx, "Serving site at %q\n", cfg.Address)
-	return http.ListenAndServe(cfg.Address, mux)
+	return http.ListenAndServe(cfg.Address, middleware.Logger(ctx, mux))
 }
 
 func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl string, data any) error {
