@@ -61,9 +61,6 @@ func Run(ctx context.Context, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	if cfg.DevMode {
-		log.Warnf(ctx, "Dev mode is enabled, templates will be reparsed each time a page is loaded.")
-	}
 
 	s := &Server{
 		renderer:  renderer,
@@ -79,6 +76,10 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 	if n != 32 {
 		return fmt.Errorf("failed to generate JWT signing key, wanted 32 bytes but got %d", n)
+	}
+	if cfg.DevMode {
+		log.Warnf(ctx, "Dev mode is enabled, templates will be reparsed each time a page is loaded.")
+		s.jwtSecret = []byte(envconfig.GetEnvOrDefault("YODAHUNTERS_JWT_SECRET", string(s.jwtSecret)))
 	}
 
 	mux := http.NewServeMux()
