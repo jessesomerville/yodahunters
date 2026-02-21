@@ -1,89 +1,118 @@
 @font-face {
-  font-family: "IBM Plex Sans";
-  src: url("../fonts/IBMPlexSans-Regular.ttf") format("truetype");
-}
-@font-face {
-  font-family: "IBM Plex Serif";
-  src: url("../fonts/IBMPlexSerif-Regular.ttf") format("truetype");
-}
-@font-face {
-  font-family: "Pochaevsk";
-  src: url("../fonts/Pochaevsk-Regular.ttf") format("truetype");
-}
-@font-face {
-  font-family: "Ruslan Display";
-  src: url("../fonts/RuslanDisplay-Regular.ttf") format("truetype");
-}
-@font-face {
-  font-family: "Staatliches";
-  src: url("../fonts/Staatliches-Regular.ttf") format("truetype");
-}
-@font-face {
   font-family: "Audiowide";
   src: url("../fonts/Audiowide-Regular.ttf") format("truetype");
 }
+
 @font-face {
   font-family: "EagleLake";
   src: url("../fonts/EagleLake-Regular.ttf") format("truetype");
 }
-/* Basic Reset & Font */
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("../fonts/IBMPlexSans-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "IBM Plex Serif";
+  src: url("../fonts/IBMPlexSerif-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Pochaevsk";
+  src: url("../fonts/Pochaevsk-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Ruslan Display";
+  src: url("../fonts/RuslanDisplay-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Staatliches";
+  src: url("../fonts/Staatliches-Regular.ttf") format("truetype");
+}
+
+:root {
+  /* Colors */
+  --color-accent-green: #62fb40;
+  --color-accent-red: #a31914;
+  --color-bg-main: #cbff7d;
+  --color-highlight: #ff4136;
+  --color-primary: #690d88;
+  --color-primary-dark: #28073b;
+  --color-primary-light: #ce89e5;
+  --color-secondary: #6ae1f0;
+  --color-secondary-dark: #0f419e;
+  --color-secondary-teal: #0a8797;
+  --color-shadow-light: rgb(191, 188, 215);
+  --color-text-main: #430303;
+  --color-tertiary: #f8d671;
+  --color-tertiary-light: #ffedac;
+  --color-tertiary-pale: #fcf3d0;
+
+  /* Fonts */
+  --font-display-1: "Staatliches", sans-serif;
+  --font-display-2: "Audiowide", sans-serif;
+  --font-display-3: "EagleLake", serif;
+  --font-display-4: "Pochaevsk", sans-serif;
+  --font-sans: "IBM Plex Sans", sans-serif;
+  --font-serif: "IBM Plex Serif", serif;
+}
+
 body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-main);
+  font-family: var(--font-serif);
   margin: 0;
-  font-family: "IBM Plex Serif", serif;
-  background-color: #cbff7d;
-  color: #430303;
 }
 
 pre {
-  font-family: "IBM Plex Serif", serif;
+  font-family: var(--font-serif);
   white-space: pre-wrap;
 }
 
 .wrap {
-  max-width: 1500px;
   margin: auto;
+  max-width: 1500px;
 }
 
 .site-header {
-  background: radial-gradient(circle, #A31914 0%, #62FB40 100%);
-  box-shadow: inset 0 0 5px 1px #62FB40, 0px 1px 2px 1px;
-  margin: 10px;
-  height: 160px;
+  background: radial-gradient(circle, var(--color-accent-red) 0%, var(--color-accent-green) 100%);
+  border-radius: 5px;
+  box-shadow: inset 0 0 5px 1px var(--color-accent-green), 0 1px 2px 1px;
   display: grid;
+  gap: 5px;
   grid-template-columns: 20% 1fr;
   grid-template-rows: 50% 20% 25%;
-  gap: 5px;
+  height: 160px;
   justify-content: space-around;
-  border-radius: 5px;
+  margin: 10px;
 }
 
 .site-logo {
-  width: 90%;
-  height: 100%;
-  margin-left: 5px;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  background: linear-gradient(0deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  border-radius: 5px;
   display: block;
   grid-column: 1;
-  grid-row: 1/3;
-  background: linear-gradient(0deg, #28073B 0%, #690D88 100%);
-  border-radius: 5px;
+  grid-row: 1 / 3;
+  height: 100%;
+  margin: 5px 0 5px 5px;
+  width: 90%;
 }
 
 .site-logo > img {
-  width: 100%;
   height: 100%;
+  width: 100%;
 }
 
 .title-img {
-  width: 95%;
-  height: 100%;
   display: block;
-  margin-top: 5px;
-  margin-left: 10px;
-  margin-right: auto;
   grid-column: 2;
   grid-row: 1;
+  height: 100%;
+  margin: 5px auto 0 10px;
+  width: 95%;
 }
 
 .header-titles {
@@ -91,86 +120,80 @@ pre {
 }
 
 .header-sub {
+  align-items: center;
+  background: var(--color-primary);
+  border: solid 1px var(--color-primary-dark);
+  border-radius: 0 12px 0 12px;
+  box-shadow: inset 0 0 5px 1px var(--color-primary-dark);
+  color: black;
+  display: flex;
   grid-column: 2;
   grid-row: 2;
-  width: -moz-fit-content;
-  width: fit-content;
   height: 100%;
   margin-left: 10px;
   margin-top: 5px;
-  display: flex;
-  align-items: center;
-  color: black;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-radius: 0 12px 0 12px;
-  text-shadow: 0 0 3px #FF4136;
-  background: #690D88;
-  box-shadow: inset 0 0 5px 1px #28073B;
-  border: solid 1px #28073B;
+  padding: 0 5px;
+  text-shadow: 0 0 3px var(--color-highlight);
+  width: fit-content;
 }
 
 .site-description {
-  font-family: "Staatliches";
+  font-family: var(--font-display-1);
   font-size: 140%;
   overflow: hidden;
   text-wrap: nowrap;
 }
 
 .navbar {
-  margin-top: 5px;
-  border-radius: 0px 0px 3px 3px;
-  box-shadow: inset 0 0 5px 1px rgb(191, 188, 215), 0px 1px 2px 1px;
-  grid-row: 3;
-  grid-column: 1/3;
   align-content: center;
-  background: #0f419e;
+  background: var(--color-secondary-dark);
+  border-radius: 0 0 3px 3px;
+  box-shadow: inset 0 0 5px 1px var(--color-shadow-light), 0 1px 2px 1px;
+  grid-column: 1 / 3;
+  grid-row: 3;
+  margin-top: 5px;
   padding-left: 10px;
 }
 
 .navbar > ul {
-  text-wrap: nowrap;
-  list-style-type: none;
-  font-family: "IBM Plex Sans";
+  font-family: var(--font-sans);
   font-weight: bolder;
+  list-style-type: none;
   margin: 0 auto;
   padding: 0;
+  text-wrap: nowrap;
 }
 
 .navbar ul > li {
   display: inline-block;
-  margin-right: 5px;
-  margin-left: 0;
+  margin: 0 5px 0 0;
 }
 
 .navbar > ul > li > a {
+  color: var(--color-tertiary);
   font-size: 100%;
-  color: #f8d671;
   text-decoration: none;
 }
 
 .word-up {
-  margin-left: 10px;
-  margin-right: 10px;
-  margin-top: 10px;
-  padding: 0;
+  background: var(--color-tertiary-light);
   border-radius: 6px;
   box-shadow: -2px 1px 1px 1px;
-  background: #ffedac;
+  margin: 10px 10px 0;
+  padding: 0;
 }
 
 .word-up-title {
-  font-family: "Audiowide";
-  font-weight: bolder;
-  color: #6AE1F0;
-  font-size: 150%;
-  display: inline-block;
-  margin: 0;
-  padding-left: 5px;
-  padding-right: 5px;
+  background: linear-gradient(161deg, var(--color-primary) 30%, var(--color-primary-light) 50%, var(--color-primary) 70%);
   border-radius: 5px;
-  box-shadow: 0 0 0px 2px #28073B;
-  background: linear-gradient(161deg, #690D88 30%, #ce89e5 50%, #690D88 70%);
+  box-shadow: 0 0 0 2px var(--color-primary-dark);
+  color: var(--color-secondary);
+  display: inline-block;
+  font-family: var(--font-display-2);
+  font-size: 150%;
+  font-weight: bolder;
+  margin: 0;
+  padding: 0 5px;
 }
 
 .word-up-content {
@@ -178,75 +201,71 @@ pre {
 }
 
 .category-filter {
-  margin: 5px;
+  background: var(--color-tertiary);
   border-radius: 3px;
-  box-shadow: inset 0 0 5px 1px rgb(191, 188, 215), 0px 1px 2px 1px;
-  background: #f8d671;
-  padding-left: 10px;
-  color: #0f419e;
+  box-shadow: inset 0 0 5px 1px var(--color-shadow-light), 0 1px 2px 1px;
+  color: var(--color-secondary-dark);
   display: inline-block;
+  margin: 5px;
   padding: 10px;
 }
 
 .category-filter > ul {
-  text-wrap: nowrap;
-  list-style-type: none;
-  font-family: "IBM Plex Sans";
+  display: inline-block;
+  font-family: var(--font-sans);
   font-weight: bolder;
+  list-style-type: none;
   margin: 0 auto;
   padding: 0;
-  display: inline-block;
+  text-wrap: nowrap;
 }
 
 .category-filter ul > li {
   display: inline-block;
-  margin-right: 5px;
-  margin-left: 0;
+  margin: 0 5px 0 0;
+}
+
+.category-filter ul > li > a {
+  color: var(--color-secondary-dark);
+  font-family: var(--font-display-1);
+  font-size: 100%;
+  text-decoration: none;
 }
 
 .category-filter ul > li > a:hover {
-  color: #6AE1F0;
+  color: var(--color-secondary);
 }
-
-.category-filter > ul > li > a {
-  font-size: 100%;
-  text-decoration: none;
-  font-family: 'Staatliches';
-  color: #0f419e;
-}
-
 
 .threadbox {
-  margin-left: 10px;
-  margin-right: 10px;
+  margin: 0 10px;
 }
 
 .threadbox-title-content {
-  font-family: "EagleLake";
+  font-family: var(--font-display-3);
   font-size: 150%;
   margin: 5px;
 }
 
 .threadbox-table {
-  margin: 0;
-  width: 100%;
+  background-color: var(--color-tertiary-light);
   border-collapse: collapse;
-  text-align: left;
-  overflow: hidden;
   border-radius: 6px;
   box-shadow: -2px 1px 1px 1px;
-  background-color: #ffedac;
+  margin: 0;
+  overflow: hidden;
+  text-align: left;
+  width: 100%;
 }
 
 .threadbox-table-header {
-  overflow: hidden;
-  background-color: #6AE1F0;
-  font-family: "Pochaevsk";
-  font-size: 18px;
-  color: #690D88;
-  text-shadow: 1px 1px 0 #FF4136;
-  box-shadow: inset 0px 0px 6px 2px #0a8797;
+  background-color: var(--color-secondary);
   border-radius: 5px 5px 0 0;
+  box-shadow: inset 0 0 6px 2px var(--color-secondary-teal);
+  color: var(--color-primary);
+  font-family: var(--font-display-4);
+  font-size: 18px;
+  overflow: hidden;
+  text-shadow: 1px 1px 0 var(--color-highlight);
 }
 
 .caticon {
@@ -259,24 +278,24 @@ th.threadbox-icon-cell {
 }
 
 .threadbox-row > td {
-  box-shadow: inset 0px 0px 5px 2px #f8d671;
-  border: 1px solid #28073B;
+  border: 1px solid var(--color-primary-dark);
+  box-shadow: inset 0 0 5px 2px var(--color-tertiary);
   padding: 3px;
 }
 
 .threadbox-row > td > a {
-  text-decoration: none;
   font-weight: bold;
+  text-decoration: none;
 }
 
 .threadbox-row > td > a:hover {
-  color: #690D88;
-  text-shadow: 1px 1px #28073B;
+  color: var(--color-primary);
+  text-shadow: 1px 1px var(--color-primary-dark);
 }
 
 .threadbox-icon-cell {
-  width: 90px;
   text-align: center;
+  width: 90px;
 }
 
 .submenu {
@@ -288,19 +307,19 @@ th.threadbox-icon-cell {
 }
 
 .threadbox-title-cell {
+  max-width: 500px;
+  overflow: hidden;
+  padding-left: 5px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
-  max-width: 500px;
-  padding-left: 5px;
 }
 
 .threadbox-author-cell {
+  max-width: 300px;
+  overflow: hidden;
+  padding-left: 5px;
   text-align: left;
   white-space: nowrap;
-  overflow: hidden;
-  max-width: 300px;
-  padding-left: 5px;
 }
 
 .threadbox-replies-cell {
@@ -308,9 +327,9 @@ th.threadbox-icon-cell {
 }
 
 .threadbox-rating-cell {
-  width: 100px;
-  white-space: nowrap;
   text-align: center;
+  white-space: nowrap;
+  width: 100px;
 }
 
 .rating-star {
@@ -319,12 +338,12 @@ th.threadbox-icon-cell {
 }
 
 .threadbox-lastpost-cell {
+  max-width: 200px;
+  overflow: hidden;
+  padding-left: 5px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
-  max-width: 200px;
-  padding-left: 5px;
-}/*# sourceMappingURL=style.css.map */
+}
 
 .threadbox-lastpost-ts {
   margin: 3px;
@@ -336,103 +355,93 @@ th.threadbox-icon-cell {
 }
 
 .login-box {
-  margin-top: 10px;
-  width: auto;
+  background: var(--color-tertiary-light);
   border-radius: 6px;
-  box-shadow: 0px 3px 3px 3px;
-  background: #ffedac;
-  padding-left: 5%;
-  padding-right: 5%;
+  box-shadow: 0 3px 3px 3px;
   display: grid;
+  margin-top: 10px;
+  padding: 0 5%;
   place-items: center;
+  width: auto;
 }
 
 .reg-input {
-  font-family: "IBM Plex Serif";
-  margin-left: 10px;
-  margin-right: 10px;
-  font-size: 12pt;
-  background-color: #fcf3d0;
-  border: solid 2px #0f419e;
+  background-color: var(--color-tertiary-pale);
+  border: solid 2px var(--color-secondary-dark);
   border-radius: 3px;
-  box-shadow: 0 0 2px 0px #28073B;
+  box-shadow: 0 0 2px 0 var(--color-primary-dark);
+  font-family: var(--font-serif);
+  font-size: 12pt;
+  margin: 0 10px 20px;
   width: 50px;
-  margin-bottom: 20px;
 }
 
-
 .login-title {
-  margin-top: 10px;
-  border-radius: 3px 3px 3px 3px;
-  box-shadow: inset 0 0 5px 1px rgb(191, 188, 215), 0px 1px 2px 1px;
-  background: #690D88;
-  padding-left: 10px;
-  font-family: "EagleLake";
+  background: var(--color-primary);
+  border-radius: 3px;
+  box-shadow: inset 0 0 5px 1px var(--color-shadow-light), 0 1px 2px 1px;
+  color: var(--color-tertiary);
+  font-family: var(--font-display-3);
   font-size: 150%;
-  margin-left: 10px;
-  margin-right: 10px;
+  margin: 10px 10px 0;
   padding: 5px;
-  color: #f8d671;;
-  text-shadow: 1px 1px 0 #0f419e;
+  text-shadow: 1px 1px 0 var(--color-secondary-dark);
 }
 
 .input-label {
-  font-family: "Audiowide";
+  font-family: var(--font-display-2);
   margin: 10px;
 }
 
 .input {
-  font-family: "IBM Plex Serif";
-  margin: 10px;
-  font-size: 12pt;
-  background-color: #fcf3d0;
-  border: solid 2px #0f419e;
+  background-color: var(--color-tertiary-pale);
+  border: solid 2px var(--color-secondary-dark);
   border-radius: 3px;
-  box-shadow: 0 0 2px 0px #28073B;
+  box-shadow: 0 0 2px 0 var(--color-primary-dark);
+  font-family: var(--font-serif);
+  font-size: 12pt;
+  margin: 10px;
 }
 
 .submit-button {
-  font-family: "Staatliches";
-  font-size: 14pt;
+  background: var(--color-accent-red);
+  color: var(--color-tertiary);
   display: block;
-  margin: auto;
-  margin-bottom: 10px;
-  color:#f8d671;
-  background: #A31914;
+  font-family: var(--font-display-1);
+  font-size: 14pt;
+  margin: 0 auto 10px;
 }
 
 .paginator-wrapper {
   display: grid;
-  grid-template-columns: auto auto auto auto auto;
-  justify-items: end;
+  grid-template-columns: repeat(5, auto);
   justify-content: end;
-  margin-top: 10px;
-  margin-right: 20px;
-  margin-left: auto;
+  justify-items: end;
+  margin: 10px 20px 0 auto;
 }
 
 .paginator-select {
-  width: 50px;
-  height: 40px;
   font-size: 30px;
+  height: 40px;
   margin-right: 10px;
+  width: 50px;
 }
 
 .paginator-button {
-  padding: 1px 6px;
+  background-color: var(--color-tertiary-pale);
   border-radius: 3px;
-  background-color: #fcf3d0;
+  box-shadow: inset 0 0 5px 2px var(--color-tertiary), 0 1px 1px 1px;
   margin-right: 10px;
-  box-shadow: inset 0px 0px 5px 2px #f8d671, 0px 1px 1px 1px;
+  padding: 1px 6px;
 }
 
 a:hover.paginator-button {
-  background-color: #6AE1F0;
+  background-color: var(--color-secondary);
 }
 
 .footer-wrapper {
-  margin-top: 10px;
   margin-bottom: 50px;
+  margin-top: 10px;
 }
 
 .newthread-wrapper {
@@ -441,13 +450,12 @@ a:hover.paginator-button {
 }
 
 .newthread-box {
-  margin-top: 10px;
-  width: auto;
+  background: var(--color-tertiary-light);
   border-radius: 6px;
-  box-shadow: 0px 3px 3px 3px;
-  background: #ffedac;
-  padding-left: 5%;
-  padding-right: 5%;
+  box-shadow: 0 3px 3px 3px;
+  margin-top: 10px;
+  padding: 0 5%;
+  width: auto;
 }
 
 .newthread-form {
@@ -456,35 +464,33 @@ a:hover.paginator-button {
 }
 
 .newthread-form > input {
+  margin: 10px 0;
   max-width: 500px;
-  margin-top: 10px;
-  margin-bottom: 10px
 }
 
 .category-select {
-  height: 40px;
   font-size: 30px;
-  margin-right: 10px;
+  height: 40px;
+  margin: 10px 10px 10px 0;
   max-width: 300px;
-  margin: 10px;
 }
 
 .textarea-input {
-  font-family: "IBM Plex Serif";
-  margin: 10px;
-  font-size: 12pt;
-  background-color: #fcf3d0;
-  border: solid 2px #0f419e;
+  background-color: var(--color-tertiary-pale);
+  border: solid 2px var(--color-secondary-dark);
   border-radius: 3px;
-  box-shadow: 0 0 2px 0px #28073B;
+  box-shadow: 0 0 2px 0 var(--color-primary-dark);
+  font-family: var(--font-serif);
+  font-size: 12pt;
+  margin: 10px;
 }
 
 .newthread-submit-button {
-  font-family: "Staatliches";
+  background: var(--color-accent-red);
+  color: var(--color-tertiary);
+  font-family: var(--font-display-1);
   font-size: 14pt;
   margin: 10px;
-  color:#f8d671;
-  background: #A31914;
   max-width: 200px;
 }
 
@@ -495,166 +501,165 @@ a:hover.paginator-button {
 }
 
 .user-view-box {
-  margin-top: 10px;
-  width: 75%;
+  background: var(--color-tertiary-light);
   border-radius: 6px;
-  box-shadow: 0px 3px 3px 3px;
-  background: #ffedac;
-  padding-left: 10px;
+  box-shadow: 0 3px 3px 3px;
   display: grid;
   grid-template-columns: max-content auto;
+  margin-top: 10px;
+  padding-left: 10px;
+  width: 75%;
 }
 
 .user-view-username {
-  margin-top: 10px;
-  border-radius: 3px 3px 3px 3px;
-  box-shadow: inset 0 0 5px 1px rgb(191, 188, 215), 0px 1px 2px 1px;
-  background: #690D88;
-  font-family: "EagleLake";
+  background: var(--color-primary);
+  border-radius: 3px;
+  box-shadow: inset 0 0 5px 1px var(--color-shadow-light), 0 1px 2px 1px;
+  color: var(--color-tertiary);
+  font-family: var(--font-display-3);
   font-size: 150%;
   margin-right: 10px;
-  padding: 5px;
-  color: #f8d671;;
-  text-shadow: 1px 1px 0 #0f419e;
-  text-align: center;
-  overflow-wrap: anywhere;
+  margin-top: 10px;
   max-width: 300px;
+  overflow-wrap: anywhere;
+  padding: 5px;
+  text-align: center;
+  text-shadow: 1px 1px 0 var(--color-secondary-dark);
 }
 
 .user-admin-badge {
-  font-family: "Audiowide";
-  font-size: 12px;
-  background-color: #6AE1F0;
-  color: #28073B;
-  border-radius: 3px;
-  padding: 3px;
   align-self: center;
-  width:fit-content;
+  background-color: var(--color-secondary);
+  border-radius: 3px;
+  color: var(--color-primary-dark);
+  font-family: var(--font-display-2);
+  font-size: 12px;
+  padding: 3px;
+  width: fit-content;
 }
 
 .user-view-avatar {
-  width: 128px;
+  border: 1px solid var(--color-primary-dark);
   height: 128px;
   justify-self: center;
-  border: 1px solid #28073B;
+  width: 128px;
 }
 
 .user-view-bio-box {
-  margin-left: 10px;
-  height: 50%;
   align-self: stretch;
+  height: 50%;
+  margin-left: 10px;
 }
 
 .user-view-bio {
-  background-color: #fcf3d0;
+  background-color: var(--color-tertiary-pale);
   border-radius: 3px;
-  width: 80%;
+  font-family: var(--font-serif);
+  font-size: 12pt;
   height: 70%;
   padding: 5px;
-  font-family: "IBM Plex Serif";
-  font-size: 12pt;
+  width: 80%;
 }
 
 .bio-textarea {
-  background-color: #fcf3d0;
-  border: solid 2px #0f419e;
+  background-color: var(--color-tertiary-pale);
+  border: solid 2px var(--color-secondary-dark);
   border-radius: 3px;
-  box-shadow: 0 0 2px 0px #28073B;
-  width: 80%;
-  height: 70%;
-  padding: 5px;
-  font-family: "IBM Plex Serif";
+  box-shadow: 0 0 2px 0 var(--color-primary-dark);
+  font-family: var(--font-serif);
   font-size: 12pt;
+  height: 70%;
   margin: 10px;
+  padding: 5px;
+  width: 80%;
 }
 
 .reg-bio-textarea {
-  background-color: #fcf3d0;
-  border: solid 2px #0f419e;
+  background-color: var(--color-tertiary-pale);
+  border: solid 2px var(--color-secondary-dark);
   border-radius: 3px;
-  box-shadow: 0 0 2px 0px #28073B;
-  height: 70%;
-  padding: 5px;
-  font-family: "IBM Plex Serif";
+  box-shadow: 0 0 2px 0 var(--color-primary-dark);
+  font-family: var(--font-serif);
   font-size: 12pt;
+  height: 70%;
   margin: 10px;
+  padding: 5px;
 }
 
 .select-avatar-box {
+  border: solid 2px var(--color-secondary-dark);
   grid-column: 1 / -1;
-  border: solid 2px #0f419e;
-  padding: 5px;
   margin: 10px;
+  padding: 5px;
 }
 
 .avatar-container {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  overflow: auto;
+  grid-template-columns: repeat(4, 1fr);
   max-height: 300px;
+  overflow: auto;
 }
 
 .threadbox-thread-cat-title {
-  font-family: "Staatliches";
+  font-family: var(--font-display-1);
   font-size: 14pt;
 }
 
 .threadbox-comment-author-cell {
-  vertical-align: top;
-  display: inline-block;
-  text-align: center;
-  width: 96%;
   border: none;
   box-shadow: none;
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+  width: 96%;
 }
 
 .threadbox-comment-body-cell {
-  width: 100%;
   position: relative;
+  width: 100%;
 }
 
 .threadbox-comment-body {
-  padding: 10px;
-  padding-bottom: 30px;
+  padding: 10px 10px 30px;
 }
 
 .thread-reply-button {
-  position:absolute;
+  background: var(--color-tertiary);
+  border-radius: 5% / 100%;
   bottom: 8px;
+  font-family: var(--font-serif);
   left: 150px;
-  background: #f8d671;
-  font-family: "IBM Plex Serif";
-  border-radius: 5%/100%;
+  position: absolute;
 }
 
 .threadbox-comment-ts {
-  position: absolute;
-  left: 5px;
   bottom: 0;
   font-size: 10px;
+  left: 5px;
+  position: absolute;
 }
 
 .comment-box {
-  width: 100%;
   display: grid;
   grid-template-columns: 1fr;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .quote-block {
-  font-family: "IBM Plex Serif";
-  margin: 10px;
-  font-size: 12pt;
-  background-color: #fcf3d0;
-  border: solid 1px #28073B;
+  background-color: var(--color-tertiary-pale);
+  border: solid 1px var(--color-primary-dark);
   border-radius: 3px;
+  font-family: var(--font-serif);
+  font-size: 12pt;
+  margin: 10px;
   overflow: scroll;
 }
 
 .quote-heading {
+  color: var(--color-primary-dark);
   font-size: 9pt;
   font-style: italic;
-  color: #28073B;
   margin-left: 5px;
 }
 
