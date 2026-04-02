@@ -224,7 +224,8 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 		Expires:  time.Now().Add(12 * time.Hour), // Set an expiration time
 		Path:     "/",                            // Make the cookie available to all paths
 		HttpOnly: true,
-		// Secure: true,
+		Secure:   !s.devmode,
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	http.SetCookie(w, cookie)

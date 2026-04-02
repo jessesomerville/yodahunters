@@ -7,11 +7,12 @@ import (
 	"log"
 
 	"github.com/google/safehtml/template"
+	"github.com/jessesomerville/yodahunters/internal/envconfig"
 	"github.com/jessesomerville/yodahunters/internal/server"
 )
 
 var (
-	addr    = flag.String("addr", "localhost:8080", "the address for the server to listen on")
+	addr    = flag.String("addr", ":"+envconfig.GetEnvOrDefault("PORT", "8080"), "the address for the server to listen on")
 	devmode = flag.Bool("devmode", false, "enable devmode (reload templates on each page load)")
 )
 

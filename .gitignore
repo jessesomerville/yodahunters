@@ -19,8 +19,10 @@
 !*.sql
 !*.js
 
+!Dockerfile
 !README.md
 !/docs/*.md
+!/terraform/*.tf
 
 # !Makefile
 
