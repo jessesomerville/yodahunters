@@ -43,22 +43,20 @@ type Server struct {
 
 // Run starts the server and returns an error upon exit.
 func Run(ctx context.Context, cfg Config) error {
-	logPath, err := log.LogToFile()
-	if err != nil {
-		return err
-	}
-	log.Infof(ctx, "Started writing logs to %s", logPath)
+	log.InitLogger()
+	log.Infof(ctx, "Started logger")
 
 	renderer, err := templates.New(cfg.TemplateFS)
 	if err != nil {
 		return err
 	}
 	dbname := envconfig.GetEnvOrDefault("YODAHUNTERS_DATABASE_NAME", "yodahunters-db")
-	if err := pg.CreateDBIfNotExists(ctx, dbname); err != nil {
-		return err
-	}
 	dbClient, err := pg.NewClient(ctx, dbname)
 	if err != nil {
+		return err
+	}
+
+	if err := pg.RunMigrations(ctx, dbClient); err != nil {
 		return err
 	}
 

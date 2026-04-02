@@ -4,8 +4,10 @@ package pg
 import (
 	"context"
 	"fmt"
+	"net"
 	"regexp"
 
+	"cloud.google.com/go/cloudsqlconn"
 	"github.com/jackc/pgx/v5"
 	"github.com/jessesomerville/yodahunters/internal/envconfig"
 	"github.com/jessesomerville/yodahunters/internal/log"
@@ -56,7 +58,25 @@ type Client struct {
 func NewClient(ctx context.Context, dbname string) (*Client, error) {
 	cs := ConnString(dbname)
 	log.Infof(ctx, "Creating new client using %q", redactPassword(cs))
-	conn, err := pgx.Connect(ctx, ConnString(dbname))
+
+	cfg, err := pgx.ParseConfig(cs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse connection string: %w", err)
+	}
+
+	instanceConnName := envconfig.GetEnvOrDefault("DB_INSTANCE_CONNECTION_NAME", "")
+	if instanceConnName != "" {
+		// Use IAM Authentication for Cloud SQL
+		d, err := cloudsqlconn.NewDialer(ctx, cloudsqlconn.WithIAMAuthN())
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize Cloud SQL dialer: %w", err)
+		}
+		cfg.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return d.Dial(ctx, instanceConnName)
+		}
+	}
+
+	conn, err := pgx.ConnectConfig(ctx, cfg)
 	if err == nil {
 		err = conn.Ping(ctx)
 	}
