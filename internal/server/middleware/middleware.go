@@ -10,9 +10,6 @@ import (
 
 type ctxKey string
 
-// CtxSecretKey is used to set and retrieve the JWT signing secret.
-const CtxSecretKey ctxKey = "jwt_secret"
-
 // CtxUserKey is used to set and retrieve the user ID from a request context.
 const CtxUserKey ctxKey = "userID"
 
@@ -29,14 +26,14 @@ func AuthorizationHandler(next http.HandlerFunc, secret []byte) http.HandlerFunc
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := Authorize(r, secret)
 		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
 			log.Errorf(r.Context(), "Authorization Failed!")
+			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 		isAdmin, err := IsAdmin(r, secret)
 		if err != nil {
-			http.Redirect(w, r, "/", http.StatusFound)
 			log.Errorf(r.Context(), "Admin authorization Failed!")
+			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
 		ctx := context.WithValue(r.Context(), CtxUserKey, userID)
@@ -62,8 +59,7 @@ func PageHandler(next http.HandlerFunc) http.HandlerFunc {
 // to the request context.
 func AdminHandler(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		isAdmin := r.Context().Value(CtxAdminKey)
-		if !(isAdmin).(bool) {
+		if isAdmin := r.Context().Value(CtxAdminKey); !(isAdmin).(bool) {
 			log.Errorf(r.Context(), "Admin authorization Failed!")
 			http.Redirect(w, r, "/", http.StatusFound)
 			return

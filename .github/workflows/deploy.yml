@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-go@v6
+      with:
+        go-version: stable
+        cache: true
+    - run: go build -v ./...
+    - run: go test -v ./...
+
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-go@v6
+      with:
+        go-version: stable
+        cache: true
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+    - name: Set up gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Build and bundle
+      run: |
+        GOOS=linux GOARCH=amd64 go build -o /tmp/yodahunters ./cmd/backend
+        tar -czf /tmp/yodahunters-deploy.tar.gz -C /tmp yodahunters -C $GITHUB_WORKSPACE templates/
+
+    - name: Deploy to VM
+      run: |
+        gcloud compute scp /tmp/yodahunters-deploy.tar.gz yodahunters:/tmp/yodahunters-deploy.tar.gz \
+          --zone us-central1-a --tunnel-through-iap
+        gcloud compute ssh yodahunters \
+          --zone us-central1-a --tunnel-through-iap \
+          --command '
+            sudo tar -xzf /tmp/yodahunters-deploy.tar.gz -C /opt/yodahunters/
+            sudo chown -R yodahunters:yodahunters /opt/yodahunters/
+            sudo chmod +x /opt/yodahunters/yodahunters
+            rm /tmp/yodahunters-deploy.tar.gz
+            sudo systemctl restart yodahunters
+          '

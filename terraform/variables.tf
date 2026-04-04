@@ -9,22 +9,21 @@ variable "region" {
   default     = "us-central1"
 }
 
-variable "db_instance_name" {
-  description = "The name of the Cloud SQL instance."
+variable "zone" {
+  description = "The zone to deploy the VM to."
   type        = string
-  default     = "yodahunters-db"
+  default     = "us-central1-a"
 }
 
-variable "db_name" {
-  description = "The name of the database."
+variable "domain_name" {
+  description = "The domain name for the application."
   type        = string
-  default     = "yodahunters-db"
+  default     = "yodahunters.com"
 }
 
-variable "db_user" {
-  description = "The database user."
+variable "ssh_user_email" {
+  description = "The Google account email allowed to SSH into the VM via IAP."
   type        = string
-  default     = "yodahunters-user"
 }
 
 variable "db_password" {
@@ -37,10 +36,4 @@ variable "jwt_secret_value" {
   description = "The value for the JWT secret."
   type        = string
   sensitive   = true
-}
-
-variable "domain_name" {
-  description = "The domain name for the application."
-  type        = string
-  default     = "yodahunters.com"
 }

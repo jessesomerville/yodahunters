@@ -16,8 +16,7 @@ import (
 func RunMigrations(ctx context.Context, client *Client) error {
 	log.Infof(ctx, "Running database migrations...")
 
-	// Convert *pgx.ConnConfig to *sql.DB
-	db := stdlib.OpenDB(*client.conn.Config())
+	db := stdlib.OpenDBFromPool(client.pool)
 	defer db.Close()
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})

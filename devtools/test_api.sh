@@ -1,4 +1,5 @@
-#!/usr/bin/env -S bash -e
+#!/bin/bash
+set -euo pipefail
 
 # Script for testing api endpoints after authz has been applied
 # This just logs in and adds the cookie to a curl command to 

@@ -1,0 +1,19 @@
+[Unit]
+Description=yodahunters web server
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=yodahunters
+Group=yodahunters
+WorkingDirectory=/opt/yodahunters
+EnvironmentFile=/opt/yodahunters/.env
+ExecStartPre=+/opt/yodahunters/fetch-secrets.sh
+EnvironmentFile=/opt/yodahunters/.secrets
+ExecStart=/opt/yodahunters/yodahunters
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
