@@ -20,6 +20,7 @@ type User struct {
 	PasswordHash []byte    `json:"-" db:"pw_hash"`
 	Bio          string    `json:"bio,omitempty" db:"bio"`
 	Avatar       int       `json:"avatar,omitempty" db:"avatar"`
+	IsAdmin      bool      `json:"-" db:"is_admin"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
 
@@ -50,6 +51,50 @@ type Comment struct {
 	Body      string    `json:"body" db:"body"`
 	ReplyID   int       `json:"reply_id,omitempty" db:"reply_id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+// ThreadView is the view model for a thread as shown in list pages (home, category).
+type ThreadView struct {
+	CategoryID      int       `db:"category_id"`
+	ThreadID        int       `db:"thread_id"`
+	Title           string    `db:"title"`
+	AuthorName      string    `db:"username"`
+	AuthorID        int       `db:"author_id"`
+	Pinned          bool      `db:"pinned"`
+	ReplyCount      int       `db:"reply_count"`
+	LatestComment   string    `db:"latest_comment"`
+	LatestCommentID int       `db:"latest_comment_id"`
+	LatestTS        time.Time `db:"latest_ts"`
+}
+
+// ThreadDetail is the full view model for a single thread page.
+type ThreadDetail struct {
+	Title         string    `db:"title"`
+	ThreadID      int       `db:"thread_id"`
+	Body          string    `db:"body"`
+	AuthorID      int       `db:"author_id"`
+	Avatar        int       `db:"avatar"`
+	AvatarStr     string    `db:"-"`
+	Username      string    `db:"username"`
+	CategoryID    int       `db:"category_id"`
+	CategoryTitle string    `db:"category_title"`
+	CreatedAt     time.Time `db:"created_at"`
+}
+
+// CommentView is the view model for a comment as shown on a thread page.
+type CommentView struct {
+	AuthorID            int       `db:"author_id"`
+	Avatar              int       `db:"avatar"`
+	AvatarStr           string    `db:"-"`
+	Username            string    `db:"username"`
+	CommentID           int       `db:"comment_id"`
+	ReplyID             int       `db:"reply_id"`
+	ReplyPage           int       `db:"reply_page"`
+	ReplyBody           string    `db:"reply_body"`
+	ReplyAuthorUsername string    `db:"reply_author_username"`
+	ReplyAuthorID       int       `db:"reply_author_id"`
+	Body                string    `db:"body"`
+	CreatedAt           time.Time `db:"created_at"`
 }
 
 // GeneratePasswordHash adds a hashed password to a User struct if  there is a

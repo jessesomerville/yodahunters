@@ -4,11 +4,10 @@ package pg
 import (
 	"context"
 	"fmt"
-	"net"
 	"regexp"
 
-	"cloud.google.com/go/cloudsqlconn"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jessesomerville/yodahunters/internal/envconfig"
 	"github.com/jessesomerville/yodahunters/internal/log"
 )
@@ -19,11 +18,11 @@ import (
 // query. A field's corresponding column can be explicitly defined by
 // specifying the column's name in the "db" struct tag. Fields with the "db"
 // tag set to "-" will be ignored.
-func QueryRowsToStruct[T any](ctx context.Context, client *Client, sql string, params ...any) ([]T, error) {
-	if client == nil {
+func QueryRowsToStruct[T any](ctx context.Context, db DB, sql string, params ...any) ([]T, error) {
+	if db == nil {
 		return nil, ErrClientUninitialized
 	}
-	rows, err := client.Query(ctx, sql, params...)
+	rows, err := db.Query(ctx, sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -32,11 +31,11 @@ func QueryRowsToStruct[T any](ctx context.Context, client *Client, sql string, p
 }
 
 // QueryRowToStruct executes a query and returns a single row as the struct T.
-func QueryRowToStruct[T any](ctx context.Context, client *Client, sql string, params ...any) (T, error) {
-	if client == nil {
+func QueryRowToStruct[T any](ctx context.Context, db DB, sql string, params ...any) (T, error) {
+	if db == nil {
 		return *new(T), ErrClientUninitialized
 	}
-	rows, err := client.Query(ctx, sql, params...)
+	rows, err := db.Query(ctx, sql, params...)
 	if err != nil {
 		return *new(T), err
 	}
@@ -44,9 +43,12 @@ func QueryRowToStruct[T any](ctx context.Context, client *Client, sql string, pa
 	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
 }
 
+// Compile-time check that *Client implements DB.
+var _ DB = (*Client)(nil)
+
 // Client is a postgres client for interacting with a postgres server.
 type Client struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 }
 
 // NewClient initializes a new Client connected to the named DB.
@@ -59,37 +61,22 @@ func NewClient(ctx context.Context, dbname string) (*Client, error) {
 	cs := ConnString(dbname)
 	log.Infof(ctx, "Creating new client using %q", redactPassword(cs))
 
-	cfg, err := pgx.ParseConfig(cs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse connection string: %w", err)
-	}
-
-	instanceConnName := envconfig.GetEnvOrDefault("DB_INSTANCE_CONNECTION_NAME", "")
-	if instanceConnName != "" {
-		// Use IAM Authentication for Cloud SQL
-		d, err := cloudsqlconn.NewDialer(ctx, cloudsqlconn.WithIAMAuthN())
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize Cloud SQL dialer: %w", err)
-		}
-		cfg.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return d.Dial(ctx, instanceConnName)
-		}
-	}
-
-	conn, err := pgx.ConnectConfig(ctx, cfg)
-	if err == nil {
-		err = conn.Ping(ctx)
-	}
+	pool, err := pgxpool.New(ctx, cs)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrConnection, err)
 	}
-	return &Client{conn}, nil
+	if err := pool.Ping(ctx); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("%w: %v", ErrConnection, err)
+	}
+	return &Client{pool}, nil
 }
 
-// Close closes the connection to the database.
+// Close closes the pool and all connections within it.
 // After calling Close on a client, subsequent calls to Close are a no-op.
-func (c *Client) Close(ctx context.Context) error {
-	return c.conn.Close(ctx)
+func (c *Client) Close(_ context.Context) error {
+	c.pool.Close()
+	return nil
 }
 
 // Query executes a query and returns the resulting rows.
@@ -98,10 +85,7 @@ func (c *Client) Close(ctx context.Context) error {
 // as $1, $2, etc. Parameters can only be used to substitute data values, not
 // identifiers such as table or column names.
 func (c *Client) Query(ctx context.Context, sql string, params ...any) (pgx.Rows, error) {
-	if err := c.healthCheck(ctx); err != nil {
-		return nil, err
-	}
-	return c.conn.Query(ctx, sql, params...)
+	return c.pool.Query(ctx, sql, params...)
 }
 
 // QueryRow executes a query and returns the resulting row.
@@ -110,10 +94,7 @@ func (c *Client) Query(ctx context.Context, sql string, params ...any) (pgx.Rows
 // as $1, $2, etc. Parameters can only be used to substitute data values, not
 // identifiers such as table or column names.
 func (c *Client) QueryRow(ctx context.Context, sql string, params ...any) (pgx.Row, error) {
-	if err := c.healthCheck(ctx); err != nil {
-		return nil, err
-	}
-	return c.conn.QueryRow(ctx, sql, params...), nil
+	return c.pool.QueryRow(ctx, sql, params...), nil
 }
 
 // Exec executes sql and returns the status of the operation.
@@ -122,22 +103,8 @@ func (c *Client) QueryRow(ctx context.Context, sql string, params ...any) (pgx.R
 // statement to execute. See [Client.Query] for information on parameter
 // substitution.
 func (c *Client) Exec(ctx context.Context, sql string, params ...any) error {
-	if err := c.healthCheck(ctx); err != nil {
-		return err
-	}
-	_, err := c.conn.Exec(ctx, sql, params...)
+	_, err := c.pool.Exec(ctx, sql, params...)
 	return err
-}
-
-// healthy checks the health of the client's connection.
-func (c *Client) healthCheck(ctx context.Context) error {
-	if c.conn.IsClosed() {
-		return ErrClientClosed
-	}
-	if err := c.conn.Ping(ctx); err != nil {
-		return fmt.Errorf("%w: %v", ErrConnection, err)
-	}
-	return nil
 }
 
 // ConnString returns a keyword/value connection string for the server.

@@ -1,32 +1,37 @@
 #!/bin/bash
-set -e
+#
+# Deploy the code to the VM.
+# Usage: ./devtools/deploy.sh [PROJECT] [ZONE]
+set -euo pipefail
 
-# Configuration
-PROJECT_ID="yodahunters"
-REGION="us-central1"
-SERVICE_NAME="yodahunters"
-IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT_ID}/${SERVICE_NAME}/${SERVICE_NAME}:latest"
-SERVICE_ACCOUNT="yodahunters-runner@${PROJECT_ID}.iam.gserviceaccount.com"
-DB_INSTANCE="${PROJECT_ID}:${REGION}:yodahunters-db"
-DB_NAME="yodahunters-db"
-DB_USER="yodahunters-runner@${PROJECT_ID}.iam" # IAM format for Postgres
+PROJECT="${1:-yodahunters}"
+ZONE="${2:-us-central1-a}"
+INSTANCE="yodahunters"
+BINARY="/tmp/yodahunters"
+BUNDLE="/tmp/yodahunters-deploy.tar.gz"
 
-echo "Starting deployment for ${SERVICE_NAME}..."
+echo "Building linux/amd64 binary..."
+GOOS=linux GOARCH=amd64 go build -o "$BINARY" ./cmd/backend
 
-# 1. Build and push image using Cloud Build
-echo "Building container image..."
-gcloud builds submit --tag "$IMAGE_NAME" --project "$PROJECT_ID" .
+echo "Bundling binary and templates..."
+tar -czf "$BUNDLE" -C "$(dirname "$BINARY")" yodahunters -C "$(pwd)" templates/
 
-# 2. Deploy to Cloud Run
-echo "Deploying to Cloud Run..."
-gcloud run deploy "$SERVICE_NAME" \
-  --image "$IMAGE_NAME" \
-  --region "$REGION" \
-  --project "$PROJECT_ID" \
-  --service-account "$SERVICE_ACCOUNT" \
-  --set-env-vars "DB_INSTANCE_CONNECTION_NAME=${DB_INSTANCE},YODAHUNTERS_DATABASE_NAME=${DB_NAME},YODAHUNTERS_DATABASE_USER=${DB_USER}" \
-  --set-secrets "YODAHUNTERS_JWT_SECRET=yodahunters-jwt-secret:latest" \
-  --allow-unauthenticated
+echo "Uploading bundle via IAP tunnel..."
+gcloud compute scp "$BUNDLE" "${INSTANCE}:/tmp/yodahunters-deploy.tar.gz" \
+  --zone "$ZONE" --project "$PROJECT" --tunnel-through-iap
 
-echo "Deployment complete!"
-gcloud run services describe "$SERVICE_NAME" --platform managed --region "$REGION" --project "$PROJECT_ID" --format='value(status.url)'
+echo "Installing and restarting service..."
+gcloud compute ssh "$INSTANCE" \
+  --zone "$ZONE" --project "$PROJECT" --tunnel-through-iap \
+  --command '
+    sudo tar -xzf /tmp/yodahunters-deploy.tar.gz -C /opt/yodahunters/
+    sudo chown -R yodahunters:yodahunters /opt/yodahunters/
+    sudo chmod +x /opt/yodahunters/yodahunters
+    rm /tmp/yodahunters-deploy.tar.gz
+    sudo systemctl restart yodahunters
+    sleep 2
+    sudo systemctl status yodahunters --no-pager
+  '
+
+rm "$BINARY" "$BUNDLE"
+echo "Deploy complete"

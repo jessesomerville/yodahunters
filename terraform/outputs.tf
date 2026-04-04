@@ -1,24 +1,14 @@
-output "db_instance_connection_name" {
-  description = "The connection name of the Cloud SQL instance."
-  value       = google_sql_database_instance.yodahunters_instance.connection_name
+output "vm_ip" {
+  description = "The external IP address of the VM."
+  value       = google_compute_address.yodahunters_ip.address
 }
 
-output "service_account_email" {
-  description = "The email of the Cloud Run service account."
-  value       = google_service_account.yodahunters_sa.email
+output "ssh_command" {
+  description = "SSH command to connect to the VM via IAP tunnel."
+  value       = "gcloud compute ssh yodahunters --zone ${var.zone} --tunnel-through-iap --project ${var.project_id}"
 }
 
-output "artifact_registry_repository" {
-  description = "The URL of the Artifact Registry repository."
-  value       = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.yodahunters_repo.name}"
-}
-
-output "jwt_secret_name" {
-  description = "The name of the JWT secret in Secret Manager."
-  value       = google_secret_manager_secret.jwt_secret.name
-}
-
-output "db_password_secret_name" {
-  description = "The name of the DB password secret in Secret Manager."
-  value       = google_secret_manager_secret.db_password.name
+output "backup_bucket" {
+  description = "The GCS bucket for database backups."
+  value       = google_storage_bucket.backups.name
 }

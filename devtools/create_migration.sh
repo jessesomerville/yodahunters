@@ -1,4 +1,5 @@
-#!/usr/bin/env -S bash -e
+#!/bin/bash
+set -euo pipefail
 
 if ! command -v migrate >/dev/null 2>&1; then
   echo "migrate not found, you probably need to install it:"
@@ -24,5 +25,5 @@ BEGIN;
 
 END;"
 
-MIGRATIONS=(${REPO_DIR}/migrations/*)
+MIGRATIONS=(${REPO_DIR}/migrations/*.sql)
 for fname in "${MIGRATIONS[@]: -2}"; do echo "$TEMPLATE" >> $fname; done

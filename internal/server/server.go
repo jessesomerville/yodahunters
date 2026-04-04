@@ -8,6 +8,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/google/safehtml/template"
 	"github.com/jessesomerville/yodahunters/internal/envconfig"
@@ -15,6 +19,7 @@ import (
 	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 	"github.com/jessesomerville/yodahunters/internal/templates"
+	"github.com/jessesomerville/yodahunters/static"
 )
 
 // Config defines the backend server configuration.
@@ -34,7 +39,7 @@ type Server struct {
 	renderer *templates.Renderer
 	tmplFS   template.TrustedFS
 
-	dbClient *pg.Client
+	store Store
 
 	jwtSecret []byte
 
@@ -55,6 +60,7 @@ func Run(ctx context.Context, cfg Config) error {
 	if err != nil {
 		return err
 	}
+	defer dbClient.Close(ctx)
 
 	if err := pg.RunMigrations(ctx, dbClient); err != nil {
 		return err
@@ -63,7 +69,7 @@ func Run(ctx context.Context, cfg Config) error {
 	s := &Server{
 		renderer: renderer,
 		tmplFS:   cfg.TemplateFS,
-		dbClient: dbClient,
+		store:    newPGStore(dbClient),
 		devmode:  cfg.DevMode,
 	}
 
@@ -78,56 +84,83 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", middleware.Chain(s.handleHome, s.jwtSecret))
+	mux.Handle("/", s.chain(s.handleHome))
 	mux.Handle("GET /login", middleware.ErrorHandler(s.handleLogin))
 	mux.Handle("GET /register", middleware.ErrorHandler(s.handleRegister))
 	mux.Handle("GET /register/{regkey}", middleware.ErrorHandler(s.handleRegisterKey))
-	mux.Handle("GET /new_thread", middleware.Chain(s.handleNewThread, s.jwtSecret))
-	mux.Handle("GET /users/{id}", middleware.Chain(s.handleUsers, s.jwtSecret))
-	mux.Handle("GET /users/edit", middleware.Chain(s.handleUsersEdit, s.jwtSecret))
-	mux.Handle("GET /threads/{id}", middleware.Chain(s.handleThread, s.jwtSecret))
-	mux.Handle("GET /category/{id}", middleware.Chain(s.handleCategory, s.jwtSecret))
+	mux.Handle("GET /new_thread", s.chain(s.handleNewThread))
+	mux.Handle("GET /users/{id}", s.chain(s.handleUsers))
+	mux.Handle("GET /users/edit", s.chain(s.handleUsersEdit))
+	mux.Handle("GET /threads/{id}", s.chain(s.handleThread))
+	mux.Handle("GET /category/{id}", s.chain(s.handleCategory))
 
 	// TODO: Switch all the middleware to the full chain
 	apiMux := http.NewServeMux()
-	apiMux.Handle("GET /threads", middleware.Chain(s.apiHandleGetThreads, s.jwtSecret))
-	apiMux.Handle("GET /category/{id}", middleware.Chain(s.getHandleGetThreadsByCategoryID, s.jwtSecret))
-	apiMux.Handle("GET /threads/{id}", middleware.Chain(s.apiHandleGetThreadByID, s.jwtSecret))
-	apiMux.Handle("GET /threads/{id}/comments", middleware.Chain(s.apiHandleGetCommentsByThreadID, s.jwtSecret))
-	apiMux.Handle("POST /threads", middleware.Chain(s.apiHandlePostThreads, s.jwtSecret))
+	apiMux.Handle("GET /threads", s.chain(s.apiHandleGetThreads))
+	apiMux.Handle("GET /category/{id}", s.chain(s.getHandleGetThreadsByCategoryID))
+	apiMux.Handle("GET /threads/{id}", s.chain(s.apiHandleGetThreadByID))
+	apiMux.Handle("GET /threads/{id}/comments", s.chain(s.apiHandleGetCommentsByThreadID))
+	apiMux.Handle("POST /threads", s.chain(s.apiHandlePostThreads))
 	// TODO?: delete
 
-	apiMux.HandleFunc("POST /categories", middleware.AdminChain(s.apiHandlePostCategories, s.jwtSecret))
-	apiMux.HandleFunc("GET /categories", middleware.Chain(s.apiHandleGetCategories, s.jwtSecret))
+	apiMux.HandleFunc("POST /categories", s.adminChain(s.apiHandlePostCategories))
+	apiMux.HandleFunc("GET /categories", s.chain(s.apiHandleGetCategories))
 
-	apiMux.Handle("POST /comments", middleware.Chain(s.apiHandlePostComments, s.jwtSecret))
-	apiMux.Handle("GET /comments/{id}", middleware.Chain(s.apiHandleGetCommentByID, s.jwtSecret))
+	apiMux.Handle("POST /comments", s.chain(s.apiHandlePostComments))
+	apiMux.Handle("GET /comments/{id}", s.chain(s.apiHandleGetCommentByID))
 
 	apiMux.HandleFunc("POST /register", middleware.ErrorHandler(s.apiHandleRegister))
 	apiMux.HandleFunc("POST /login", middleware.ErrorHandler(s.apiHandleLogin))
 
-	apiMux.HandleFunc("GET /me", middleware.Chain(s.apiHandleGetMe, s.jwtSecret))
-	apiMux.HandleFunc("POST /me", middleware.Chain(s.apiHandlePostMe, s.jwtSecret))
+	apiMux.HandleFunc("GET /me", s.chain(s.apiHandleGetMe))
+	apiMux.HandleFunc("POST /me", s.chain(s.apiHandlePostMe))
 
 	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
-	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServerFS(static.FS)))
+
+	srv := &http.Server{Addr: cfg.Address, Handler: middleware.Logger(ctx, mux)}
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		select {
+		case <-sigCh:
+		case <-ctx.Done():
+		}
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Errorf(ctx, "HTTP server shutdown: %v", err)
+		}
+	}()
 
 	log.Infof(ctx, "Serving site at %q\n", cfg.Address)
-	return http.ListenAndServe(cfg.Address, middleware.Logger(ctx, mux))
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		return err
+	}
+	return nil
+}
+
+func (s *Server) chain(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+	return middleware.Chain(f, s.jwtSecret)
+}
+
+func (s *Server) adminChain(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+	return middleware.AdminChain(f, s.jwtSecret)
 }
 
 func (s *Server) serveHTML(ctx context.Context, w http.ResponseWriter, tmpl string, data any) error {
+	renderer := s.renderer
 	if s.devmode {
-		renderer, err := templates.New(s.tmplFS)
+		var err error
+		renderer, err = templates.New(s.tmplFS)
 		if err != nil {
 			return err
 		}
-		s.renderer = renderer
 	}
 
-	buf, err := s.renderer.Render(tmpl, data)
+	buf, err := renderer.Render(tmpl, data)
 	if err != nil {
 		return err
 	}
