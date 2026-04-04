@@ -61,23 +61,20 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 
 	s := &Server{
-		renderer:  renderer,
-		tmplFS:    cfg.TemplateFS,
-		dbClient:  dbClient,
-		devmode:   cfg.DevMode,
-		jwtSecret: make([]byte, 32),
+		renderer: renderer,
+		tmplFS:   cfg.TemplateFS,
+		dbClient: dbClient,
+		devmode:  cfg.DevMode,
 	}
-	// Generate the JWT signing key
-	n, err := rand.Read(s.jwtSecret)
-	if err != nil {
-		return err
-	}
-	if n != 32 {
-		return fmt.Errorf("failed to generate JWT signing key, wanted 32 bytes but got %d", n)
-	}
-	if cfg.DevMode {
-		log.Warnf(ctx, "Dev mode is enabled, templates will be reparsed each time a page is loaded.")
-		s.jwtSecret = []byte(envconfig.GetEnvOrDefault("YODAHUNTERS_JWT_SECRET", string(s.jwtSecret)))
+
+	s.jwtSecret = []byte(envconfig.GetEnvOrDefault("YODAHUNTERS_JWT_SECRET", ""))
+	if len(s.jwtSecret) != 32 {
+		log.Warnf(ctx, "Falling back to ephemeral JWT secret due to invalid YODAHUNTERS_JWT_SECRET")
+		s.jwtSecret = make([]byte, 32)
+		n, err := rand.Read(s.jwtSecret)
+		if err != nil || n != 32 {
+			return fmt.Errorf("failed to generate JWT signing key: %v", err)
+		}
 	}
 
 	mux := http.NewServeMux()
