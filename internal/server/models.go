@@ -20,7 +20,7 @@ type User struct {
 	PasswordHash []byte    `json:"-" db:"pw_hash"`
 	Bio          string    `json:"bio,omitempty" db:"bio"`
 	Avatar       int       `json:"avatar,omitempty" db:"avatar"`
-	CreatedAt    time.Time `json:"created_at,omitempty" db:"created_at"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
 
 // Thread is a struct that holds all the data needed for thread functionality.
@@ -30,7 +30,7 @@ type Thread struct {
 	Body       string    `json:"body" db:"body"`
 	AuthorID   int       `json:"author_id,omitempty" db:"author_id"`
 	CategoryID int       `json:"category_id,omitempty" db:"category_id"`
-	CreatedAt  time.Time `json:"created_at,omitempty" db:"created_at"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
 
 // Category is a struct for managing categories in the app.
@@ -39,7 +39,7 @@ type Category struct {
 	Title       string    `json:"title" db:"title"`
 	Description string    `json:"description" db:"description"`
 	AuthorID    int       `json:"author_id,omitempty" db:"author_id"`
-	CreatedAt   time.Time `json:"created_at,omitempty" db:"created_at"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 }
 
 // A Comment is a post responding to a thread.
@@ -49,7 +49,7 @@ type Comment struct {
 	AuthorID  int       `json:"author_id,omitempty" db:"author_id"`
 	Body      string    `json:"body" db:"body"`
 	ReplyID   int       `json:"reply_id,omitempty" db:"reply_id"`
-	CreatedAt time.Time `json:"created_at,omitempty" db:"created_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
 // GeneratePasswordHash adds a hashed password to a User struct if  there is a

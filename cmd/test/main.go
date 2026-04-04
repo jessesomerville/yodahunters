@@ -35,7 +35,7 @@ func main() {
 		Jar: jar,
 	}
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		username := babbler.Babble()
 		password := babbler.Babble()
 		email := username + "@example.com"
@@ -65,7 +65,7 @@ func main() {
 
 		numThreads := rand.Intn(5) + 1
 		fmt.Println("Posting", numThreads, "threads")
-		for j := 0; j < numThreads; j++ {
+		for range numThreads {
 			title := babbler.Babble()
 			body := babbler.Babble()
 			threadBody := fmt.Sprintf(`{"title": "%s", "body": "%s", "category_id": 1}`, title, body)
@@ -88,7 +88,7 @@ func main() {
 
 		numComments := rand.Intn(10) + 1
 		fmt.Println("Posting", numComments, "comments")
-		for j := 0; j < numComments; j++ {
+		for range numComments {
 			threadID := threadIDs[rand.Intn(len(threadIDs))]
 			body := babbler.Babble()
 			commentBody := fmt.Sprintf(`{"thread_id": %d, "body": "%s"}`, threadID, body)
