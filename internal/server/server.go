@@ -8,10 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/google/safehtml/template"
 	"github.com/jessesomerville/yodahunters/internal/envconfig"
@@ -39,7 +35,7 @@ type Server struct {
 	renderer *templates.Renderer
 	tmplFS   template.TrustedFS
 
-	store Store
+	dbClient *pg.Client
 
 	jwtSecret []byte
 
@@ -62,14 +58,10 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 	defer dbClient.Close(ctx)
 
-	if err := pg.RunMigrations(ctx, dbClient); err != nil {
-		return err
-	}
-
 	s := &Server{
 		renderer: renderer,
 		tmplFS:   cfg.TemplateFS,
-		store:    newPGStore(dbClient),
+		dbClient: dbClient,
 		devmode:  cfg.DevMode,
 	}
 
@@ -120,20 +112,6 @@ func Run(ctx context.Context, cfg Config) error {
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServerFS(static.FS)))
 
 	srv := &http.Server{Addr: cfg.Address, Handler: middleware.Logger(ctx, mux)}
-
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		select {
-		case <-sigCh:
-		case <-ctx.Done():
-		}
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(shutdownCtx); err != nil {
-			log.Errorf(ctx, "HTTP server shutdown: %v", err)
-		}
-	}()
 
 	log.Infof(ctx, "Serving site at %q\n", cfg.Address)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {

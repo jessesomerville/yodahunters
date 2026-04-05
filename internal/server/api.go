@@ -7,17 +7,34 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/server/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+// This is ugly but I think it is one of the faster ways to do, and a lot
+// of requests are going to hit it.
+func pageBuilder(q string, r *http.Request) string {
+	var sb strings.Builder
+	var page middleware.Page
+	page = r.Context().Value(middleware.CtxPageKey).(middleware.Page)
+	offset := strconv.Itoa(page.Size * (page.Number - 1))
+	size := strconv.Itoa(page.Size)
+	sb.WriteString(q)
+	sb.WriteString(" ORDER BY created_at DESC")
+	sb.WriteString(" OFFSET ")
+	sb.WriteString(offset)
+	sb.WriteString(" LIMIT ")
+	sb.WriteString(size)
+	return sb.String()
+}
 
 func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) error {
-	page := r.Context().Value(middleware.CtxPageKey).(middleware.Page)
-	threads, err := s.store.GetThreads(r.Context(), page)
+	q := pageBuilder(`SELECT thread_id, author_id, category_id, title, body, created_at FROM threads`, r)
+	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q)
 	if err != nil {
 		return err
 	}
@@ -25,12 +42,9 @@ func (s *Server) apiHandleGetThreads(w http.ResponseWriter, r *http.Request) err
 }
 
 func (s *Server) getHandleGetThreadsByCategoryID(w http.ResponseWriter, r *http.Request) error {
-	categoryID, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		return fmt.Errorf("invalid category ID %q", r.PathValue("id"))
-	}
-	page := r.Context().Value(middleware.CtxPageKey).(middleware.Page)
-	threads, err := s.store.GetThreadsByCategoryID(r.Context(), categoryID, page)
+	q := pageBuilder(`SELECT thread_id, author_id, category_id, title, body, created_at FROM threads WHERE category_id = $1`, r)
+	categoryID := r.PathValue("id")
+	threads, err := pg.QueryRowsToStruct[Thread](r.Context(), s.dbClient, q, categoryID)
 	if err != nil {
 		return err
 	}
@@ -42,7 +56,9 @@ func (s *Server) apiHandleGetThreadByID(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
 	}
-	thread, err := s.store.GetThreadByID(r.Context(), id)
+
+	q := pageBuilder(`SELECT thread_id, author_id, title, body, created_at FROM threads WHERE id = $1`, r)
+	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, id)
 	if err != nil {
 		return err
 	}
@@ -59,8 +75,13 @@ func (s *Server) apiHandlePostThreads(w http.ResponseWriter, r *http.Request) er
 	if err := json.Unmarshal(reqBody, &t); err != nil {
 		return err
 	}
-	authorID := r.Context().Value(middleware.CtxUserKey).(int)
-	thread, err := s.store.CreateThread(r.Context(), t.Title, t.Body, t.CategoryID, authorID)
+
+	const q = `
+	INSERT INTO threads (title, body, category_id, author_id)
+	VALUES ($1, $2, $3, $4)
+	RETURNING thread_id, author_id, category_id, title, body, created_at`
+
+	thread, err := pg.QueryRowToStruct[Thread](r.Context(), s.dbClient, q, t.Title, t.Body, t.CategoryID, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}
@@ -86,52 +107,74 @@ func (s *Server) apiHandleRegister(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
+	// We're gonna validate the email address
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(data.Email) {
 		return fmt.Errorf("invalid email address")
 	}
 
-	regKeyExists, err := s.store.ValidateRegKey(r.Context(), data.RegistrationKey)
+	const checkRegQuery = "SELECT EXISTS(SELECT 1 FROM registration_keys WHERE reg_key = $1 AND used = false)"
+	var regKeyExists bool
+	row, err := s.dbClient.QueryRow(r.Context(), checkRegQuery, data.RegistrationKey)
 	if err != nil {
 		return err
 	}
+	row.Scan(&regKeyExists)
 	if !regKeyExists {
 		return fmt.Errorf("invalid registration key")
 	}
 
-	userExists, err := s.store.CheckUsernameExists(r.Context(), data.Username)
+	const checkUserExists = "SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)"
+	var userExists bool
+	row, err = s.dbClient.QueryRow(r.Context(), checkUserExists, data.Username)
 	if err != nil {
 		return err
 	}
+	row.Scan(&userExists)
 	if userExists {
 		return fmt.Errorf("user with username: %s already exists", data.Username)
 	}
 
-	emailExists, err := s.store.CheckEmailExists(r.Context(), data.Email)
+	const checkEmailExists = "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)"
+	var emailExists bool
+	row, err = s.dbClient.QueryRow(r.Context(), checkEmailExists, data.Email)
 	if err != nil {
 		return err
 	}
+	row.Scan(&emailExists)
 	if emailExists {
 		return fmt.Errorf("user with email: %s already exists", data.Email)
 	}
 
-	u := User{
-		Username: data.Username,
-		Email:    data.Email,
-		Password: data.Password,
-		Bio:      data.Bio,
-		Avatar:   data.Avatar,
-	}
+	var u User
+	u.Username = data.Username
+	u.Email = data.Email
+	u.Password = data.Password
+	u.Bio = data.Bio
+	u.Avatar = data.Avatar
+
 	if err = u.GeneratePasswordHash(); err != nil {
 		return err
 	}
-
-	user, err := s.store.CreateUser(r.Context(), u.Username, u.Email, u.PasswordHash, u.Bio, u.Avatar)
+	const insertUser = `
+	INSERT INTO users (username, email, pw_hash, bio, avatar)
+	VALUES ($1, $2, $3, $4, $5)
+	RETURNING id, username, email, bio, avatar, created_at`
+	row, err = s.dbClient.QueryRow(r.Context(), insertUser, u.Username, u.Email, u.PasswordHash, u.Bio, u.Avatar)
 	if err != nil {
 		return err
 	}
-	if err := s.store.UseRegKey(r.Context(), user.ID, data.RegistrationKey); err != nil {
+
+	var user User
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.Avatar, &user.CreatedAt)
+
+	const updateRegKey = "UPDATE registration_keys SET used = true, used_by = $1 WHERE reg_key = $2"
+	row, err = s.dbClient.QueryRow(r.Context(), updateRegKey, user.ID, data.RegistrationKey)
+	if err != nil {
 		return err
 	}
+	row.Scan()
+
 	return json.NewEncoder(w).Encode(user)
 }
 
@@ -149,40 +192,57 @@ func (s *Server) apiHandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	user, err := s.store.GetUserForLogin(r.Context(), login.Username)
+	const q = "SELECT id, pw_hash, is_admin FROM users WHERE username = $1"
+	row, err := s.dbClient.QueryRow(r.Context(), q, login.Username)
 	if err != nil {
 		return err
 	}
-	if err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(login.Password)); err != nil {
+	var id int
+	var passwordHash []byte
+	var isAdmin bool
+	if err = row.Scan(&id, &passwordHash, &isAdmin); err != nil {
 		return err
 	}
 
-	jwt, err := middleware.GenerateJWT(user.ID, user.IsAdmin, s.jwtSecret)
+	err = bcrypt.CompareHashAndPassword(passwordHash, []byte(login.Password))
 	if err != nil {
 		return err
 	}
 
-	http.SetCookie(w, &http.Cookie{
+	jwt, err := middleware.GenerateJWT(id, isAdmin, s.jwtSecret)
+	if err != nil {
+		return err
+	}
+	var token struct {
+		AccessToken string `json:"access_token"`
+	}
+	token.AccessToken = jwt.Raw
+
+	cookie := &http.Cookie{
 		Name:     "access_token",
 		Value:    jwt.Raw,
-		Expires:  time.Now().Add(12 * time.Hour),
-		Path:     "/",
+		Expires:  time.Now().Add(12 * time.Hour), // Set an expiration time
+		Path:     "/",                            // Make the cookie available to all paths
 		HttpOnly: true,
 		Secure:   !s.devmode,
 		SameSite: http.SameSiteLaxMode,
-	})
+	}
 
-	return json.NewEncoder(w).Encode(struct {
-		AccessToken string `json:"access_token"`
-	}{jwt.Raw})
+	http.SetCookie(w, cookie)
+
+	return json.NewEncoder(w).Encode(token)
 }
 
 func (s *Server) apiHandleGetMe(w http.ResponseWriter, r *http.Request) error {
-	userID := r.Context().Value(middleware.CtxUserKey).(int)
-	user, err := s.store.GetUserByID(r.Context(), userID)
+	const q = "SELECT id, username, email, bio, avatar, created_at FROM users WHERE id = $1"
+	row, err := s.dbClient.QueryRow(r.Context(), q, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}
+	// I'm using row.Scan instead of QueryRowToStruct to avoid having to deal with
+	// passwords/password hashes
+	var user User
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.Avatar, &user.CreatedAt)
 	return json.NewEncoder(w).Encode(user)
 }
 
@@ -192,18 +252,23 @@ func (s *Server) apiHandlePostMe(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	var update struct {
+	type userUpdate struct {
 		Bio    string
 		Avatar int
 	}
+	var update userUpdate
 	if err := json.Unmarshal(reqBody, &update); err != nil {
 		return err
 	}
-	userID := r.Context().Value(middleware.CtxUserKey).(int)
-	user, err := s.store.UpdateUser(r.Context(), update.Bio, update.Avatar, userID)
+
+	q := `UPDATE users SET bio = $1, avatar = $2 WHERE id = $3
+	RETURNING id, username, email, bio, avatar, created_at`
+	row, err := s.dbClient.QueryRow(r.Context(), q, update.Bio, update.Avatar, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}
+	var user User
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Bio, &user.Avatar, &user.CreatedAt)
 	return json.NewEncoder(w).Encode(user)
 }
 
@@ -217,8 +282,13 @@ func (s *Server) apiHandlePostComments(w http.ResponseWriter, r *http.Request) e
 	if err := json.Unmarshal(reqBody, &c); err != nil {
 		return err
 	}
-	authorID := r.Context().Value(middleware.CtxUserKey).(int)
-	comment, err := s.store.CreateComment(r.Context(), c.ThreadID, c.ReplyID, authorID, c.Body)
+	// If reply isn't specified it will be set to 0 by default
+	const q = `
+	INSERT INTO comments (thread_id, body, reply_id, author_id)
+	VALUES ($1, $2, $3, $4)
+	RETURNING comment_id, thread_id, author_id, body, reply_id, created_at`
+
+	comment, err := pg.QueryRowToStruct[Comment](r.Context(), s.dbClient, q, c.ThreadID, c.Body, c.ReplyID, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}
@@ -230,8 +300,9 @@ func (s *Server) apiHandleGetCommentsByThreadID(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return fmt.Errorf("invalid thread ID %q", r.PathValue("id"))
 	}
-	page := r.Context().Value(middleware.CtxPageKey).(middleware.Page)
-	comments, err := s.store.GetCommentsByThreadID(r.Context(), id, page)
+
+	q := pageBuilder(`SELECT comment_id, thread_id, author_id, body, created_at FROM comments WHERE thread_id = $1`, r)
+	comments, err := pg.QueryRowsToStruct[Comment](r.Context(), s.dbClient, q, id)
 	if err != nil {
 		return err
 	}
@@ -241,9 +312,11 @@ func (s *Server) apiHandleGetCommentsByThreadID(w http.ResponseWriter, r *http.R
 func (s *Server) apiHandleGetCommentByID(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		return fmt.Errorf("invalid comment ID %q", r.PathValue("id"))
+		return err
 	}
-	comment, err := s.store.GetCommentByID(r.Context(), id)
+
+	q := `SELECT comment_id, thread_id, author_id, body, created_at FROM comments WHERE comment_id = $1`
+	comment, err := pg.QueryRowToStruct[Comment](r.Context(), s.dbClient, q, id)
 	if err != nil {
 		return err
 	}
@@ -251,7 +324,8 @@ func (s *Server) apiHandleGetCommentByID(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) apiHandleGetCategories(w http.ResponseWriter, r *http.Request) error {
-	categories, err := s.store.GetCategories(r.Context())
+	q := `SELECT category_id, title, description FROM categories`
+	categories, err := pg.QueryRowsToStruct[Category](r.Context(), s.dbClient, q)
 	if err != nil {
 		return err
 	}
@@ -268,8 +342,12 @@ func (s *Server) apiHandlePostCategories(w http.ResponseWriter, r *http.Request)
 	if err := json.Unmarshal(reqBody, &c); err != nil {
 		return err
 	}
-	authorID := r.Context().Value(middleware.CtxUserKey).(int)
-	category, err := s.store.CreateCategory(r.Context(), c.Title, c.Description, authorID)
+	const q = `
+	INSERT INTO categories (title, description, author_id)
+	VALUES ($1, $2, $3)
+	RETURNING category_id, title, description, author_id, created_at`
+
+	category, err := pg.QueryRowToStruct[Category](r.Context(), s.dbClient, q, c.Title, c.Description, r.Context().Value(middleware.CtxUserKey))
 	if err != nil {
 		return err
 	}

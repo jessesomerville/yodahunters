@@ -18,11 +18,11 @@ import (
 // query. A field's corresponding column can be explicitly defined by
 // specifying the column's name in the "db" struct tag. Fields with the "db"
 // tag set to "-" will be ignored.
-func QueryRowsToStruct[T any](ctx context.Context, db DB, sql string, params ...any) ([]T, error) {
-	if db == nil {
+func QueryRowsToStruct[T any](ctx context.Context, client *Client, sql string, params ...any) ([]T, error) {
+	if client == nil {
 		return nil, ErrClientUninitialized
 	}
-	rows, err := db.Query(ctx, sql, params...)
+	rows, err := client.Query(ctx, sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -31,20 +31,17 @@ func QueryRowsToStruct[T any](ctx context.Context, db DB, sql string, params ...
 }
 
 // QueryRowToStruct executes a query and returns a single row as the struct T.
-func QueryRowToStruct[T any](ctx context.Context, db DB, sql string, params ...any) (T, error) {
-	if db == nil {
+func QueryRowToStruct[T any](ctx context.Context, client *Client, sql string, params ...any) (T, error) {
+	if client == nil {
 		return *new(T), ErrClientUninitialized
 	}
-	rows, err := db.Query(ctx, sql, params...)
+	rows, err := client.Query(ctx, sql, params...)
 	if err != nil {
 		return *new(T), err
 	}
 	defer rows.Close()
 	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[T])
 }
-
-// Compile-time check that *Client implements DB.
-var _ DB = (*Client)(nil)
 
 // Client is a postgres client for interacting with a postgres server.
 type Client struct {
