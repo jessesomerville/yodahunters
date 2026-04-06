@@ -61,21 +61,11 @@ func (r *Renderer) Render(name string, data any) ([]byte, error) {
 }
 
 func fmtTime(t time.Time) string {
-	// Everyone is going to be in eastern time for now.
-	tz, err := time.LoadLocation("America/New_York")
-	if err != nil { // Always check errors even if they should not happen.
-		panic(err)
-	}
-	return t.In(tz).Format("Jan 2, 2006 03:04:05 PM")
+	return t.UTC().Format(time.RFC3339)
 }
 
 func fmtDate(t time.Time) string {
-	// Everyone is going to be in eastern time for now.
-	tz, err := time.LoadLocation("America/New_York")
-	if err != nil { // Always check errors even if they should not happen.
-		panic(err)
-	}
-	return t.In(tz).Format("Jan 2, 2006")
+	return t.UTC().Format(time.RFC3339)
 }
 
 func generateCommentID(i int) safehtml.Identifier {
