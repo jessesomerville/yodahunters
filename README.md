@@ -79,37 +79,3 @@ update the database from `<version - 1>`, and the contents of the
 
 For more info see [golang-migrate/migrate/GETTING_STARTED.md](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md).
 
-## Architecture
-
-```mermaid
-graph TD
-    subgraph "Public Internet"
-        User["User Browser"]
-    end
-
-    subgraph "Google Cloud Platform"
-        subgraph "Cloud Run Environment"
-            DomainMapping["Cloud Run Domain Mapping (yodahunters.com)"]
-            CloudRun["Cloud Run Service (Go)"]
-            Assets["Static Assets & Templates"]
-        end
-
-        subgraph "Data & Security"
-            CloudSQL[("Cloud SQL (PostgreSQL 18)")]
-            SecretManager["Secret Manager (JWT & DB Secrets)"]
-            CloudLogging["Cloud Logging (JSON format)"]
-        end
-    end
-
-    User -->|HTTPS| DomainMapping
-    DomainMapping --> CloudRun
-    CloudRun -->|Embedded FS| Assets
-    CloudRun -->|IAM Auth / Go Connector| CloudSQL
-    CloudRun -->|Access Version| SecretManager
-    CloudRun -->|Stdout/Stderr| CloudLogging
-
-    style CloudRun fill:#4285F4,color:#fff
-    style CloudSQL fill:#34A853,color:#fff
-    style SecretManager fill:#FBBC05,color:#fff
-    style CloudLogging fill:#EA4335,color:#fff
-```

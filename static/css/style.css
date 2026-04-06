@@ -610,11 +610,13 @@ a:hover.paginator-button {
 }
 
 .threadbox-comment-body-cell {
+  max-width: 0;
   position: relative;
   width: 100%;
 }
 
 .threadbox-comment-body {
+  overflow-wrap: anywhere;
   padding: 10px 10px 30px;
 
   & pre,
@@ -696,4 +698,6 @@ a:hover.paginator-button {
   margin-left: 5px;
   max-height: 200px;
   overflow: scroll;
+  overflow-wrap: anywhere;
+  padding-bottom: 0;
 }
