@@ -2,14 +2,15 @@ package server
 
 import (
 	"fmt"
+	"io/fs"
 	"math"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/jessesomerville/yodahunters/internal/pg"
 	"github.com/jessesomerville/yodahunters/internal/server/middleware"
+	"github.com/jessesomerville/yodahunters/static"
 )
 
 // PageData is a struct that stores the data necessary to handle
@@ -76,7 +77,7 @@ func (s *Server) handleRegisterKey(w http.ResponseWriter, r *http.Request) error
 
 	// This is a little bit hacky, but it makes managing profile pics
 	// very easy for now.
-	entries, err := os.ReadDir("static/img/pfps")
+	entries, err := fs.ReadDir(static.FS, "img/pfps")
 	if err != nil {
 		return err
 	}
@@ -494,7 +495,7 @@ func (s *Server) handleUsersEdit(w http.ResponseWriter, r *http.Request) error {
 
 	// This is a little bit hacky, but it makes managing profile pics
 	// very easy for now.
-	entries, err := os.ReadDir("static/img/pfps")
+	entries, err := fs.ReadDir(static.FS, "img/pfps")
 	if err != nil {
 		return err
 	}
