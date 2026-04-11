@@ -624,6 +624,11 @@ a:hover.paginator-button {
     background-color: var(--color-tertiary);
   }
 
+  & img {
+    max-width: 100%;
+    height: auto;
+  }
+
   & h1 { font-size: 1.5rem; }
   & h2 { font-size: 1.3rem; }
   & h3 { font-size: 1.2rem; }
