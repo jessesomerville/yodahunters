@@ -2,7 +2,7 @@
 
 BEGIN;
 
-ALTER TABLE threads 
+ALTER TABLE users
 DROP COLUMN bio,
 DROP COLUMN avatar;
 
