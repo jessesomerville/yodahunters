@@ -12,3 +12,13 @@ output "backup_bucket" {
   description = "The GCS bucket for database backups."
   value       = google_storage_bucket.backups.name
 }
+
+output "github_wif_provider" {
+  description = "Full resource name of the GitHub WIF provider. Set as the WIF_PROVIDER GitHub Actions secret."
+  value       = google_iam_workload_identity_pool_provider.github.name
+}
+
+output "github_ci_service_account" {
+  description = "Email of the CI service account GitHub Actions impersonates. Set as the WIF_SERVICE_ACCOUNT GitHub Actions secret."
+  value       = google_service_account.github_ci.email
+}

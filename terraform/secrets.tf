@@ -14,6 +14,7 @@ resource "google_secret_manager_secret" "jwt_secret" {
 }
 
 resource "google_secret_manager_secret_version" "jwt_secret_v1" {
+  count       = var.jwt_secret_value == null ? 0 : 1
   secret      = google_secret_manager_secret.jwt_secret.id
   secret_data = var.jwt_secret_value
 
@@ -38,6 +39,7 @@ resource "google_secret_manager_secret" "db_password" {
 }
 
 resource "google_secret_manager_secret_version" "db_password_v1" {
+  count       = var.db_password == null ? 0 : 1
   secret      = google_secret_manager_secret.db_password.id
   secret_data = var.db_password
 
