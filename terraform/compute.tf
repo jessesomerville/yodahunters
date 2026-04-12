@@ -32,13 +32,22 @@ resource "google_compute_firewall" "yodahunters_iap_ssh" {
   target_tags   = ["yodahunters"]
 }
 
-# Allow the SSH user to tunnel through IAP
+# Allow each SSH user to tunnel through IAP
 resource "google_iap_tunnel_instance_iam_member" "ssh_access" {
+  for_each = var.ssh_user_emails
   project  = var.project_id
   zone     = var.zone
   instance = google_compute_instance.yodahunters.name
   role     = "roles/iap.tunnelResourceAccessor"
-  member   = "user:${var.ssh_user_email}"
+  member   = "user:${each.value}"
+}
+
+# OS Login role for each human SSH user (required because the VM has OS Login enabled)
+resource "google_project_iam_member" "ssh_user_oslogin" {
+  for_each = var.ssh_user_emails
+  project  = var.project_id
+  role     = "roles/compute.osLogin"
+  member   = "user:${each.value}"
 }
 
 # e2-micro VM (free tier eligible in us-central1)
@@ -65,6 +74,10 @@ resource "google_compute_instance" "yodahunters" {
   service_account {
     email  = google_service_account.yodahunters_sa.email
     scopes = ["cloud-platform"]
+  }
+
+  metadata = {
+    enable-oslogin = "TRUE"
   }
 
   depends_on = [google_project_service.project_services]
