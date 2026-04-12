@@ -14,7 +14,7 @@ sudo apt-get install -y postgresql-17
 
 echo "=== Configuring PostgreSQL ==="
 sudo -u postgres psql -c "CREATE USER \"yodahunters-user\" WITH PASSWORD 'CHANGE_ME';" 2>/dev/null || echo "User already exists, skipping"
-sudo -u postgres psql -c "CREATE DATABASE \"yodahunters-db\" OWNER \"yodahunters-user\";" 2>/dev/null || echo "Database already exists, skipping"
+sudo -u postgres psql -c "CREATE DATABASE \"yodahunters\" OWNER \"yodahunters-user\";" 2>/dev/null || echo "Database already exists, skipping"
 
 echo "=== Installing Caddy ==="
 sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
@@ -32,7 +32,7 @@ echo "=== Creating environment file ==="
 sudo tee /opt/yodahunters/.env > /dev/null <<'ENVEOF'
 PORT=8080
 YODAHUNTERS_DATABASE_HOST=localhost
-YODAHUNTERS_DATABASE_NAME=yodahunters-db
+YODAHUNTERS_DATABASE_NAME=yodahunters
 YODAHUNTERS_DATABASE_USER=yodahunters-user
 ENVEOF
 sudo chmod 600 /opt/yodahunters/.env
@@ -66,7 +66,7 @@ sudo tee /opt/yodahunters/backup.sh > /dev/null <<'BACKUP'
 #!/bin/bash
 set -euo pipefail
 BACKUP_FILE="/tmp/yodahunters-$(date +%Y%m%d).sql.gz"
-sudo -u postgres pg_dump yodahunters-db | gzip > "$BACKUP_FILE"
+sudo -u postgres pg_dump yodahunters | gzip > "$BACKUP_FILE"
 gsutil cp "$BACKUP_FILE" gs://$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/project/project-id)-db-backups/
 rm "$BACKUP_FILE"
 BACKUP

@@ -1,6 +1,6 @@
 x-database-variables: &database-variables
   YODAHUNTERS_DATABASE_HOST: db
-  YODAHUNTERS_DATABASE_NAME: ${YODAHUNTERS_DATABASE_NAME:-yodahunters-db}
+  YODAHUNTERS_DATABASE_NAME: ${YODAHUNTERS_DATABASE_NAME:-yodahunters}
   YODAHUNTERS_DATABASE_PASSWORD: ${YODAHUNTERS_DATABASE_PASSWORD:-postgres}
   YODAHUNTERS_DATABASE_USER: ${YODAHUNTERS_DATABASE_USER:-postgres}
 
@@ -11,7 +11,7 @@ services:
     environment:
       <<: *database-variables
       LANG: C
-      POSTGRES_DB: ${YODAHUNTERS_DATABASE_NAME:-yodahunters-db}
+      POSTGRES_DB: ${YODAHUNTERS_DATABASE_NAME:-yodahunters}
       POSTGRES_PASSWORD: ${YODAHUNTERS_DATABASE_PASSWORD:-postgres}
       POSTGRES_USER: ${YODAHUNTERS_DATABASE_USER:-postgres}
     volumes:
