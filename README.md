@@ -55,7 +55,7 @@ migrations:
 
 ```sh
 migrate \
-    -database 'postgres://postgres:postgres@localhost:5432/yodahunters-db?sslmode=disable' \
+    -database 'postgres://postgres:postgres@localhost:5432/yodahunters?sslmode=disable' \
     -source file:migrations \
     up
 ```

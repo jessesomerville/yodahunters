@@ -25,7 +25,7 @@ check "Yodahunters enabled"   systemctl is-enabled --quiet yodahunters
 
 echo ""
 echo "=== PostgreSQL ==="
-check "Database exists"       sudo -u postgres psql -lqt -c "SELECT 1" yodahunters-db
+check "Database exists"       sudo -u postgres psql -lqt -c "SELECT 1" yodahunters
 check "User exists"           sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='yodahunters-user'"
 
 echo ""
