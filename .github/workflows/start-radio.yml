@@ -1,0 +1,41 @@
+name: Start Radio
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-go@v6
+      with:
+        go-version: stable
+        cache: true
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+    - name: Set up gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Start Radio
+      run: |
+        gcloud compute ssh yodahunters \
+          --zone us-central1-a --tunnel-through-iap \
+          --command '
+            sudo tailscale up
+            sudo systemctl icecast2 start
+            sudo tailscale serve --tcp=80 8000
+            sudo cp ./config/Radio-Caddyfile /etc/caddy/Caddyfile
+            sudo systemctl reload caddy
+          '

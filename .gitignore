@@ -21,6 +21,7 @@
 
 !Dockerfile
 !/config/Caddyfile
+!/config/Radio-Caddyfile
 !/config/yodahunters.service
 !README.md
 !/docs/*.md
