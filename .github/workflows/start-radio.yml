@@ -7,8 +7,9 @@ permissions:
   contents: read
   id-token: write
 
-  deploy:
-    name: Deploy
+jobs:
+  start:
+    name: Start Radio
     needs: test
     runs-on: ubuntu-latest
     steps:

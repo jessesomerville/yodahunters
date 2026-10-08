@@ -1,8 +1,6 @@
-name: Deploy
+name: Stop Radio
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -10,20 +8,8 @@ permissions:
   id-token: write
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-go@v6
-      with:
-        go-version: stable
-        cache: true
-    - run: go build -v ./...
-    - run: go test -v ./...
-
-  deploy:
-    name: Deploy
+  stop:
+    name: Stop Radio
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +24,7 @@ jobs:
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Deploy to VM
+    - name: Stop Radio
       run: |
         gcloud compute scp /tmp/yodahunters-deploy.tar.gz yodahunters:/tmp/yodahunters-deploy.tar.gz \
           --zone us-central1-a --tunnel-through-iap
