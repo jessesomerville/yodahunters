@@ -10,7 +10,6 @@ permissions:
 jobs:
   stop:
     name: Stop Radio
-    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
