@@ -1,10 +1,10 @@
 module github.com/jessesomerville/yodahunters
 
-go 1.26
+go 1.26.6
 
 require (
 	github.com/google/safehtml v0.1.0
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/tjarratt/babble v0.0.0-20210505082055-cbca2a4833c1
 	golang.org/x/crypto v0.49.0
 	rsc.io/markdown v0.0.0-20241212154241-6bf72452917f
@@ -19,6 +19,6 @@ require (
 	github.com/onsi/gomega v1.39.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	golang.org/x/net v0.52.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 )
