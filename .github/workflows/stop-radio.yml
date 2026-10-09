@@ -1,0 +1,40 @@
+name: Stop Radio
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  stop:
+    name: Stop Radio
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+    - name: Set up gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    # set -e throws an exit code if any of the commands fail, so we don't get silent errors
+    - name: Stop Radio
+      run: |
+        gcloud compute scp ./config/Caddyfile yodahunters:Caddyfile \
+          --zone us-central1-a --tunnel-through-iap
+        gcloud compute ssh yodahunters \
+          --zone us-central1-a --tunnel-through-iap \
+          --command '
+            set -e
+            sudo tailscale down
+            sudo systemctl stop icecast2
+            sudo cp ~/Caddyfile /etc/caddy/Caddyfile
+            rm -f ~/Caddyfile
+            sudo systemctl reload caddy
+          '

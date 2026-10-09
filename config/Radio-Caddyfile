@@ -1,0 +1,9 @@
+{$DOMAIN:yodahunters.com} {
+	reverse_proxy localhost:8080
+
+	@radio {
+		method GET
+		path /radio.ogg
+	}
+	reverse_proxy @radio localhost:8000
+}

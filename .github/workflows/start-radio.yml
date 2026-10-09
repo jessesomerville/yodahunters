@@ -1,0 +1,49 @@
+name: Start Radio
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  start:
+    name: Start Radio
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-go@v6
+      with:
+        go-version: stable
+        cache: true
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+    - name: Set up gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    # set -e throws an exit code if any of the commands fail, so we don't get silent errors
+    - name: Start Radio
+      run: |
+        gcloud compute scp ./config/Radio-Caddyfile yodahunters:Radio-Caddyfile \
+          --zone us-central1-a --tunnel-through-iap
+        gcloud compute ssh yodahunters \
+          --zone us-central1-a --tunnel-through-iap \
+          --command '
+            set -e
+            sudo tailscale up
+            sudo systemctl start icecast2
+            sudo tailscale serve reset
+            sudo tailscale serve --bg --tcp=8000 8000
+            sudo cp ~/Radio-Caddyfile /etc/caddy/Caddyfile
+            rm -f ~/Radio-Caddyfile
+            sudo systemctl reload caddy
+            echo "=== tailscale serve status ==="
+            sudo tailscale serve status
+          ' 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
