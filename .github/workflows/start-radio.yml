@@ -28,14 +28,22 @@ jobs:
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v2
 
+    # set -e throws an exit code if any of the commands fail, so we don't get silent errors
     - name: Start Radio
       run: |
+        gcloud compute scp ./config/Radio-Caddyfile yodahunters:Radio-Caddyfile \
+          --zone us-central1-a --tunnel-through-iap
         gcloud compute ssh yodahunters \
           --zone us-central1-a --tunnel-through-iap \
           --command '
+            set -e
             sudo tailscale up
-            sudo systemctl icecast2 start
-            sudo tailscale serve --tcp=80 8000
-            sudo cp ./config/Radio-Caddyfile /etc/caddy/Caddyfile
+            sudo systemctl start icecast2
+            sudo tailscale serve reset
+            sudo tailscale serve --bg --tcp=8000 8000
+            sudo cp ~/Radio-Caddyfile /etc/caddy/Caddyfile
+            rm -f ~/Radio-Caddyfile
             sudo systemctl reload caddy
-          '
+            echo "=== tailscale serve status ==="
+            sudo tailscale serve status
+          ' 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"

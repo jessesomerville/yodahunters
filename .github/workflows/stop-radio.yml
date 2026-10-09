@@ -23,16 +23,18 @@ jobs:
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v2
 
+    # set -e throws an exit code if any of the commands fail, so we don't get silent errors
     - name: Stop Radio
       run: |
-        gcloud compute scp /tmp/yodahunters-deploy.tar.gz yodahunters:/tmp/yodahunters-deploy.tar.gz \
+        gcloud compute scp ./config/Caddyfile yodahunters:Caddyfile \
           --zone us-central1-a --tunnel-through-iap
         gcloud compute ssh yodahunters \
           --zone us-central1-a --tunnel-through-iap \
           --command '
-            sudo tailscale serve off
+            set -e
             sudo tailscale down
-            sudo systemctl icecast2 stop
-            sudo cp ./config/Caddyfile /etc/caddy/Caddyfile
-            sudo systemctl caddy reload
+            sudo systemctl stop icecast2
+            sudo cp ~/Caddyfile /etc/caddy/Caddyfile
+            rm -f ~/Caddyfile
+            sudo systemctl reload caddy
           '
