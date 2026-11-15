@@ -3,7 +3,8 @@
 
 	@radio {
 		method GET
-		path /radio.ogg
+		path /radio.mp3
+		path /status-json.xsl
 	}
 	reverse_proxy @radio localhost:8000
 }

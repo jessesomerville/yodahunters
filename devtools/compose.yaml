@@ -28,6 +28,14 @@ services:
     working_dir: /yodahunters
     ports:
       - 8080:8080
+  radio:
+    image: pltnk/icecast2
+    container_name: icecast2
+    restart: always
+    ports:
+      - 8000:8000
+    profiles:
+      - radio
 
 volumes:
   pgdata:
