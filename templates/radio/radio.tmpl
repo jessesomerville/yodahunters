@@ -1,0 +1,53 @@
+{{define "main"}}
+<main>
+  <div class="stream-status-box">
+    {{if .IsRadioLive }}  
+    <h1 class="stream-status-text">We are on the air!!!!</h1>
+    {{else}}
+    <h1 class="stream-status-text">We are NOT on the air!!!!</h1>
+    {{end}} 
+  </div>
+  {{if .IsRadioLive }}
+  <div class="audio-player-box">
+    <div class="current-song">
+        <p class="current-song-text" id="current-song"></p>
+    </div>
+    <div class="audio-player">
+        <audio src="http://yodahunters.com/radio.mp3" controls>
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+  </div>
+  {{end}}
+</main>
+<script>
+async function fetchData() {
+  const url = 'http://yodahunters.com/status-json.xsl';
+  
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.icestats;
+  } catch (error) {
+    console.error('Fetch error:', error);
+  }
+}
+function pollSongTitle() {
+    fetchData().then((icestats) => {
+        if (!icestats) return; // Prevent errors if fetch failed
+        
+        const currentSongElem = document.getElementById("current-song");
+        currentSongElem.textContent = JSON.stringify(icestats.source.title);
+    })
+    .finally(() => {
+        setTimeout(pollSongTitle, 15000)
+    });
+}
+pollSongTitle();
+</script>
+{{end}}

@@ -529,3 +529,29 @@ func (s *Server) handleUsersEdit(w http.ResponseWriter, r *http.Request) error {
 	err = s.serveHTML(r.Context(), w, "edit_profile", data)
 	return err
 }
+
+func (s *Server) handleRadio(w http.ResponseWriter, r *http.Request) error {
+	isRadioLive := false
+	// We're going to swallow this error because we expect the port to be closed
+	// most of the time. We only really care if we get a 200
+	resp, err := http.Get("http://localhost:8000/radio.mp3")
+
+	if err == nil && resp.StatusCode == http.StatusOK {
+		isRadioLive = true
+	}
+
+	data := struct {
+		IsRadioLive bool
+		HeaderData  HeaderData
+	}{
+		IsRadioLive: isRadioLive,
+		HeaderData: HeaderData{
+			HTMLTitle:  "Radio",
+			UserID:     0,
+			Categories: nil,
+		},
+	}
+
+	err = s.serveHTML(r.Context(), w, "radio", data)
+	return err
+}

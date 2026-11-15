@@ -360,6 +360,29 @@ th.threadbox-icon-cell {
   width: auto;
 }
 
+.stream-status-box {
+  background: var(--color-tertiary-light);
+  border-radius: 6px;
+  box-shadow: 0 3px 3px 3px;
+  display: grid;
+  margin: 10px;
+  padding: 0 5%;
+  place-items: center;
+  width: auto;
+  font-family: var(--font-display-3);
+}
+
+
+.audio-player-box {
+  display: grid;
+  place-items: center;
+}
+
+.current-song-text {
+  font-family: var(--font-display-2);
+}
+
+
 .reg-input {
   background-color: var(--color-tertiary-pale);
   border: solid 2px var(--color-secondary-dark);
